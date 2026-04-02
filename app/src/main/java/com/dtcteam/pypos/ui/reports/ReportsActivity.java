@@ -10,7 +10,6 @@ import com.dtcteam.pypos.R;
 import com.dtcteam.pypos.api.ApiService;
 import com.dtcteam.pypos.databinding.ActivityReportsBinding;
 import com.dtcteam.pypos.model.Sale;
-import com.dtcteam.pypos.ui.common.SkeletonAdapter;
 import com.dtcteam.pypos.ui.sales.SalesAdapter;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -23,7 +22,6 @@ public class ReportsActivity extends AppCompatActivity {
     private final ApiService api = ApiService.getInstance();
     private ArrayList<Sale> sales = new ArrayList<>();
     private SalesAdapter adapter;
-    private SkeletonAdapter skeletonAdapter;
     private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("sw", "TZ"));
 
     @Override
@@ -32,41 +30,58 @@ public class ReportsActivity extends AppCompatActivity {
         binding = ActivityReportsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        setupRecyclerView();
         setupListeners();
         loadSales();
     }
 
-    private void setupRecyclerView() {
-        skeletonAdapter = new SkeletonAdapter();
-        skeletonAdapter.setLayoutResId(R.layout.item_row_skeleton);
-        skeletonAdapter.setItemCount(5);
+    private void setupListeners() {
+        binding.btnBack.setOnClickListener(v -> finish());
         
-        adapter = new SalesAdapter();
-        binding.reportsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        binding.reportsRecyclerView.setAdapter(adapter);
+        binding.btnExportAll.setOnClickListener(v -> {
+            exportAllReports();
+        });
     }
-
-    private void showSkeleton(boolean show) {
-        if (show) {
-            binding.reportsRecyclerView.setAdapter(skeletonAdapter);
-        } else {
-            binding.reportsRecyclerView.setAdapter(adapter);
+    
+    private void exportAllReports() {
+        if (sales.isEmpty()) {
+            Toast.makeText(this, "No data to export", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        StringBuilder csv = new StringBuilder();
+        csv.append("Sale ID,Date,Total Amount,Final Amount,Payment Method\n");
+        
+        for (Sale sale : sales) {
+            csv.append(sale.getId()).append(",");
+            csv.append("\"").append(sale.getCreatedAt()).append("\",");
+            csv.append(sale.getTotalAmount()).append(",");
+            csv.append(sale.getFinalAmount()).append(",");
+            csv.append("\"").append(sale.getPaymentMethod()).append("\"\n");
+        }
+        
+        String fileName = "reports_export_" + System.currentTimeMillis() + ".csv";
+        
+        try {
+            java.io.FileOutputStream fos = openFileOutput(fileName, MODE_PRIVATE);
+            fos.write(csv.toString().getBytes());
+            fos.close();
+            Toast.makeText(this, "Exported to " + fileName, Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "Export failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
     private void loadSales() {
-        showSkeleton(true);
         binding.loadingIndicator.setVisibility(View.VISIBLE);
         
         api.getSales(new ApiService.Callback<List<Sale>>() {
             @Override
             public void onSuccess(List<Sale> result) {
                 binding.loadingIndicator.setVisibility(View.GONE);
-                showSkeleton(false);
                 sales.clear();
                 double todayTotal = 0;
                 double totalSales = 0;
+                int todayCount = 0;
                 
                 if (result != null) {
                     sales.addAll(result);
@@ -76,25 +91,24 @@ public class ReportsActivity extends AppCompatActivity {
                         totalSales += sale.getFinalAmount();
                         if (sale.getCreatedAt() != null && sale.getCreatedAt().startsWith(today)) {
                             todayTotal += sale.getFinalAmount();
+                            todayCount++;
                         }
                     }
                 }
                 
                 adapter.setSales(sales);
                 binding.tvTodaySales.setText(currencyFormat.format(todayTotal));
-                binding.tvTotalSales.setText(currencyFormat.format(totalSales));
+                binding.tvTodayTransactions.setText(todayCount + " transactions");
+                binding.tvMonthlyRevenue.setText(currencyFormat.format(totalSales));
+                binding.tvTotalTransactions.setText(String.valueOf(sales.size()));
+                binding.tvStockArrivals.setText("0");
             }
 
             @Override
             public void onError(String error) {
                 binding.loadingIndicator.setVisibility(View.GONE);
-                showSkeleton(false);
                 Toast.makeText(ReportsActivity.this, error, Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-    private void setupListeners() {
-        binding.btnBack.setOnClickListener(v -> finish());
     }
 }
