@@ -154,23 +154,7 @@ public class ItemsActivity extends AppCompatActivity {
         });
     }
     
-    private void loadItems() {
-        loadItemsFromApi();
-    }
-        
-        String search = query.toLowerCase();
-        ArrayList<Item> filtered = new ArrayList<>();
-        for (Item item : items) {
-            if (item.getName().toLowerCase().contains(search) || 
-                item.getSku().toLowerCase().contains(search) ||
-                (item.getCategoryName() != null && item.getCategoryName().toLowerCase().contains(search))) {
-                filtered.add(item);
-            }
-        }
-        adapter.setItems(filtered);
-    }
-
-    private void loadItems() {
+    private void loadCategories() {
         api.getCategories(new ApiService.Callback<List<Category>>() {
             @Override
             public void onSuccess(List<Category> result) {
@@ -188,36 +172,7 @@ public class ItemsActivity extends AppCompatActivity {
     }
 
     private void loadItems() {
-        showSkeleton(true);
-        binding.loadingIndicator.setVisibility(View.VISIBLE);
-        
-        api.getItems(null, null, new ApiService.Callback<List<Item>>() {
-            @Override
-            public void onSuccess(List<Item> result) {
-                binding.loadingIndicator.setVisibility(View.GONE);
-                showSkeleton(false);
-                items.clear();
-                if (result != null) {
-                    for (Item item : result) {
-                        if (!item.isService()) {
-                            items.add(item);
-                        }
-                    }
-                }
-                adapter.setItems(items);
-                String search = binding.etSearch.getText() != null ? binding.etSearch.getText().toString() : "";
-                if (!search.isEmpty()) {
-                    filterItems(search);
-                }
-            }
-
-            @Override
-            public void onError(String error) {
-                binding.loadingIndicator.setVisibility(View.GONE);
-                showSkeleton(false);
-                Toast.makeText(ItemsActivity.this, error, Toast.LENGTH_SHORT).show();
-            }
-        });
+        loadItemsFromApi();
     }
 
     private void showItemDialog(Item item) {
