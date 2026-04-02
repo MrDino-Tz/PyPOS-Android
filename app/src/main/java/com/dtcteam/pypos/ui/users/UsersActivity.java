@@ -53,6 +53,9 @@ public class UsersActivity extends AppCompatActivity {
 
     private void setupListeners() {
         binding.btnBack.setOnClickListener(v -> finish());
+        binding.btnAdd.setOnClickListener(v -> {
+            Toast.makeText(this, "Add User feature - Coming soon", Toast.LENGTH_SHORT).show();
+        });
     }
 
     private void loadUsers() {

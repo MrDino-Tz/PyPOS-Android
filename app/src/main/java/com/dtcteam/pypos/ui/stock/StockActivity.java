@@ -1,7 +1,11 @@
 package com.dtcteam.pypos.ui.stock;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,7 +36,7 @@ public class StockActivity extends AppCompatActivity {
 
         setupRecyclerView();
         setupListeners();
-        loadLowStockItems();
+        loadItems();
     }
 
     private void setupRecyclerView() {
@@ -66,23 +70,68 @@ public class StockActivity extends AppCompatActivity {
 
     private void setupListeners() {
         binding.btnBack.setOnClickListener(v -> finish());
+        
+        binding.btnStockIn.setOnClickListener(v -> {
+            Toast.makeText(this, "Stock In feature - Coming soon", Toast.LENGTH_SHORT).show();
+        });
+        
+        binding.btnStockOut.setOnClickListener(v -> {
+            Toast.makeText(this, "Stock Out feature - Coming soon", Toast.LENGTH_SHORT).show();
+        });
+        
+        binding.btnAdjust.setOnClickListener(v -> {
+            Toast.makeText(this, "Adjust feature - Coming soon", Toast.LENGTH_SHORT).show();
+        });
+        
+        binding.etSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            
+            @Override
+            public void afterTextChanged(Editable s) {
+                filterItems(s.toString());
+            }
+        });
+    }
+    
+    private void filterItems(String query) {
+        if (query.isEmpty()) {
+            adapter.setItems(items);
+            return;
+        }
+        
+        String search = query.toLowerCase();
+        ArrayList<Item> filtered = new ArrayList<>();
+        for (Item item : items) {
+            if (item.getName().toLowerCase().contains(search) || 
+                item.getSku().toLowerCase().contains(search)) {
+                filtered.add(item);
+            }
+        }
+        adapter.setItems(filtered);
     }
 
-    private void loadLowStockItems() {
+    private void loadItems() {
         showSkeleton(true);
         binding.loadingIndicator.setVisibility(View.VISIBLE);
         
-        api.getLowStockItems(new ApiService.Callback<List<Item>>() {
+        api.getItems(null, null, new ApiService.Callback<List<Item>>() {
             @Override
             public void onSuccess(List<Item> result) {
                 binding.loadingIndicator.setVisibility(View.GONE);
                 showSkeleton(false);
                 items.clear();
                 if (result != null) {
-                    items.addAll(result);
+                    for (Item item : result) {
+                        if (!item.isService()) {
+                            items.add(item);
+                        }
+                    }
                 }
                 adapter.setItems(items);
-                binding.tvLowStockCount.setText(items.size() + " items");
             }
 
             @Override
