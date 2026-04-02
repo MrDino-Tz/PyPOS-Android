@@ -15,15 +15,16 @@ import com.dtcteam.pypos.model.User;
 import com.dtcteam.pypos.ui.account.AccountFragment;
 import com.dtcteam.pypos.ui.categories.CategoriesFragment;
 import com.dtcteam.pypos.ui.dashboard.DashboardFragment;
-import com.dtcteam.pypos.ui.items.ItemsFragment;
-import com.dtcteam.pypos.ui.login.LoginActivity;
+import com.dtcteam.pypos.ui.items.ItemsActivity;
+import com.dtcteam.pypos.ui.categories.CategoriesActivity;
+import com.dtcteam.pypos.ui.stock.StockActivity;
+import com.dtcteam.pypos.ui.reports.ReportsActivity;
+import com.dtcteam.pypos.ui.users.UsersActivity;
 import com.dtcteam.pypos.ui.pos.PosFragment;
-import com.dtcteam.pypos.ui.reports.ReportsFragment;
-import com.dtcteam.pypos.ui.sales.SalesFragment;
 import com.dtcteam.pypos.ui.settings.ServicesFragment;
 import com.dtcteam.pypos.ui.settings.SettingsFragment;
-import com.dtcteam.pypos.ui.stock.StockFragment;
-import com.dtcteam.pypos.ui.users.UsersFragment;
+import com.dtcteam.pypos.ui.login.LoginActivity;
+import com.dtcteam.pypos.ui.sales.SalesActivity;
 import com.google.android.material.navigation.NavigationView;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -100,17 +101,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else if (itemId == R.id.nav_services) {
             fragment = new ServicesFragment();
         } else if (itemId == R.id.nav_items) {
-            fragment = new ItemsFragment();
+            Intent intent = new Intent(this, ItemsActivity.class);
+            startActivity(intent);
         } else if (itemId == R.id.nav_categories) {
-            fragment = new CategoriesFragment();
+            Intent intent = new Intent(this, CategoriesActivity.class);
+            startActivity(intent);
         } else if (itemId == R.id.nav_stock) {
-            fragment = new StockFragment();
-        } else if (itemId == R.id.nav_sales) {
-            fragment = new SalesFragment();
+            Intent intent = new Intent(this, StockActivity.class);
+            startActivity(intent);
         } else if (itemId == R.id.nav_reports) {
-            fragment = new ReportsFragment();
+            Intent intent = new Intent(this, ReportsActivity.class);
+            startActivity(intent);
         } else if (itemId == R.id.nav_users) {
-            fragment = new UsersFragment();
+            Intent intent = new Intent(this, UsersActivity.class);
+            startActivity(intent);
         } else if (itemId == R.id.nav_account) {
             fragment = new AccountFragment();
         } else if (itemId == R.id.nav_logout) {
@@ -140,9 +144,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 fragment = new PosFragment();
             } else if (itemId == R.id.nav_services) {
                 fragment = new ServicesFragment();
-            } else if (itemId == R.id.nav_sales) {
-                fragment = new SalesFragment();
-            } else if (itemId == R.id.nav_settings) {
+        } else if (itemId == R.id.nav_sales) {
+            Intent intent = new Intent(this, SalesActivity.class);
+            startActivity(intent);
+            return true;
+        } else if (itemId == R.id.nav_settings) {
                 fragment = new SettingsFragment();
             }
             

@@ -7,6 +7,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 
 import com.dtcteam.pypos.R;
@@ -37,6 +39,9 @@ public class SettingsFragment extends Fragment {
         
         loadUserInfo();
         updatePinStatus();
+        updateThemeText();
+        
+        binding.cardTheme.setOnClickListener(v -> showThemeSelectionDialog());
         
         binding.btnBack.setOnClickListener(v -> {
             requireActivity().getSupportFragmentManager().popBackStack();
@@ -62,6 +67,53 @@ public class SettingsFragment extends Fragment {
             binding.tvPinStatus.setText("Not set");
             binding.switchPin.setChecked(false);
         }
+    }
+
+    private void updateThemeText() {
+        int themeMode = prefs.getInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        switch (themeMode) {
+            case AppCompatDelegate.MODE_NIGHT_NO:
+                binding.tvThemeSelection.setText("Light");
+                break;
+            case AppCompatDelegate.MODE_NIGHT_YES:
+                binding.tvThemeSelection.setText("Dark");
+                break;
+            default:
+                binding.tvThemeSelection.setText("System Default");
+                break;
+        }
+    }
+
+    private void showThemeSelectionDialog() {
+        String[] themes = {"Light", "Dark", "System Default"};
+        int themeMode = prefs.getInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        
+        int checkedItem = 2; // Default
+        if (themeMode == AppCompatDelegate.MODE_NIGHT_NO) checkedItem = 0;
+        else if (themeMode == AppCompatDelegate.MODE_NIGHT_YES) checkedItem = 1;
+
+        new AlertDialog.Builder(requireContext(), com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog_Centered)
+            .setTitle("Choose Theme")
+            .setSingleChoiceItems(themes, checkedItem, (dialog, which) -> {
+                int selectedMode;
+                switch (which) {
+                    case 0:
+                        selectedMode = AppCompatDelegate.MODE_NIGHT_NO;
+                        break;
+                    case 1:
+                        selectedMode = AppCompatDelegate.MODE_NIGHT_YES;
+                        break;
+                    default:
+                        selectedMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
+                        break;
+                }
+                
+                prefs.edit().putInt("theme_mode", selectedMode).apply();
+                AppCompatDelegate.setDefaultNightMode(selectedMode);
+                updateThemeText();
+                dialog.dismiss();
+            })
+            .show();
     }
 
     private void showSetupPinDialog() {

@@ -13,10 +13,18 @@ import java.util.Locale;
 
 public class SalesAdapter extends RecyclerView.Adapter<SalesAdapter.ViewHolder> {
 
-    private ArrayList<Sale> sales;
+    private ArrayList<Sale> sales = new ArrayList<>();
+
+    public SalesAdapter() {
+    }
 
     public SalesAdapter(ArrayList<Sale> sales) {
         this.sales = sales;
+    }
+
+    public void setSales(ArrayList<Sale> sales) {
+        this.sales = sales;
+        notifyDataSetChanged();
     }
 
     @NonNull

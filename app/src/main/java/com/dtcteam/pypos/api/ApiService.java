@@ -509,4 +509,342 @@ public class ApiService {
             }
         });
     }
+
+    public void getLowStockItems(Callback<List<Item>> callback) {
+        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/items?select=*&quantity.lt.min_stock_level&order=quantity.asc";
+        
+        Request request = new Request.Builder()
+            .url(url)
+            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+            .get()
+            .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    String responseBody = response.body().string();
+                    if (response.isSuccessful()) {
+                        JsonArray array = gson.fromJson(responseBody, JsonArray.class);
+                        List<Item> items = new ArrayList<>();
+                        for (int i = 0; i < array.size(); i++) {
+                            JsonObject json = array.get(i).getAsJsonObject();
+                            Item item = parseItem(json);
+                            items.add(item);
+                        }
+                        mainHandler.post(() -> callback.onSuccess(items));
+                    } else {
+                        mainHandler.post(() -> callback.onError("Failed to load items"));
+                    }
+                } catch (Exception e) {
+                    mainHandler.post(() -> callback.onError(e.getMessage()));
+                }
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
+    public void createItem(Item item, Callback<Item> callback) {
+        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/items";
+        
+        JsonObject body = new JsonObject();
+        body.addProperty("name", item.getName());
+        body.addProperty("sku", item.getSku());
+        if (item.getCategoryId() != null) body.addProperty("category_id", item.getCategoryId());
+        body.addProperty("unit_price", item.getUnitPrice());
+        body.addProperty("cost", item.getCost());
+        body.addProperty("quantity", item.getQuantity());
+        body.addProperty("min_stock_level", item.getMinStockLevel());
+        body.addProperty("is_active", item.isActive());
+        body.addProperty("is_service", item.isService());
+
+        Request request = new Request.Builder()
+            .url(url)
+            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+            .addHeader("Prefer", "return=representation")
+            .post(RequestBody.create(body.toString(), SupabaseClient.JSON))
+            .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    String responseBody = response.body().string();
+                    if (response.isSuccessful()) {
+                        JsonObject json = gson.fromJson(responseBody, JsonObject.class);
+                        mainHandler.post(() -> callback.onSuccess(parseItem(json)));
+                    } else {
+                        mainHandler.post(() -> callback.onError("Failed to create item"));
+                    }
+                } catch (Exception e) {
+                    mainHandler.post(() -> callback.onError(e.getMessage()));
+                }
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
+    public void updateItem(Item item, Callback<Item> callback) {
+        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/items?id=eq." + item.getId();
+        
+        JsonObject body = new JsonObject();
+        body.addProperty("name", item.getName());
+        body.addProperty("sku", item.getSku());
+        if (item.getCategoryId() != null) body.addProperty("category_id", item.getCategoryId());
+        body.addProperty("unit_price", item.getUnitPrice());
+        body.addProperty("cost", item.getCost());
+        body.addProperty("quantity", item.getQuantity());
+        body.addProperty("min_stock_level", item.getMinStockLevel());
+        body.addProperty("is_active", item.isActive());
+        body.addProperty("is_service", item.isService());
+
+        Request request = new Request.Builder()
+            .url(url)
+            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+            .addHeader("Prefer", "return=representation")
+            .patch(RequestBody.create(body.toString(), SupabaseClient.JSON))
+            .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    String responseBody = response.body().string();
+                    if (response.isSuccessful()) {
+                        JsonArray array = gson.fromJson(responseBody, JsonArray.class);
+                        if (array.size() > 0) {
+                            mainHandler.post(() -> callback.onSuccess(parseItem(array.get(0).getAsJsonObject())));
+                        } else {
+                            mainHandler.post(() -> callback.onError("Item not found"));
+                        }
+                    } else {
+                        mainHandler.post(() -> callback.onError("Failed to update item"));
+                    }
+                } catch (Exception e) {
+                    mainHandler.post(() -> callback.onError(e.getMessage()));
+                }
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
+    public void deleteItem(int itemId, Callback<Void> callback) {
+        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/items?id=eq." + itemId;
+        
+        Request request = new Request.Builder()
+            .url(url)
+            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+            .delete()
+            .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    mainHandler.post(() -> callback.onSuccess(null));
+                } else {
+                    mainHandler.post(() -> callback.onError("Failed to delete item"));
+                }
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
+    public void createCategory(Category category, Callback<Category> callback) {
+        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/categories";
+        
+        JsonObject body = new JsonObject();
+        body.addProperty("name", category.getName());
+        if (category.getDescription() != null) body.addProperty("description", category.getDescription());
+
+        Request request = new Request.Builder()
+            .url(url)
+            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+            .addHeader("Prefer", "return=representation")
+            .post(RequestBody.create(body.toString(), SupabaseClient.JSON))
+            .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    String responseBody = response.body().string();
+                    if (response.isSuccessful()) {
+                        JsonObject json = gson.fromJson(responseBody, JsonObject.class);
+                        Category cat = new Category();
+                        cat.setId(json.has("id") ? json.get("id").getAsInt() : 0);
+                        cat.setName(json.has("name") ? json.get("name").getAsString() : "");
+                        cat.setDescription(json.has("description") ? json.get("description").getAsString() : null);
+                        mainHandler.post(() -> callback.onSuccess(cat));
+                    } else {
+                        mainHandler.post(() -> callback.onError("Failed to create category"));
+                    }
+                } catch (Exception e) {
+                    mainHandler.post(() -> callback.onError(e.getMessage()));
+                }
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
+    public void updateCategory(Category category, Callback<Category> callback) {
+        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/categories?id=eq." + category.getId();
+        
+        JsonObject body = new JsonObject();
+        body.addProperty("name", category.getName());
+        if (category.getDescription() != null) body.addProperty("description", category.getDescription());
+
+        Request request = new Request.Builder()
+            .url(url)
+            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+            .addHeader("Prefer", "return=representation")
+            .patch(RequestBody.create(body.toString(), SupabaseClient.JSON))
+            .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    String responseBody = response.body().string();
+                    if (response.isSuccessful()) {
+                        JsonArray array = gson.fromJson(responseBody, JsonArray.class);
+                        if (array.size() > 0) {
+                            JsonObject json = array.get(0).getAsJsonObject();
+                            Category cat = new Category();
+                            cat.setId(json.has("id") ? json.get("id").getAsInt() : 0);
+                            cat.setName(json.has("name") ? json.get("name").getAsString() : "");
+                            cat.setDescription(json.has("description") ? json.get("description").getAsString() : null);
+                            mainHandler.post(() -> callback.onSuccess(cat));
+                        } else {
+                            mainHandler.post(() -> callback.onError("Category not found"));
+                        }
+                    } else {
+                        mainHandler.post(() -> callback.onError("Failed to update category"));
+                    }
+                } catch (Exception e) {
+                    mainHandler.post(() -> callback.onError(e.getMessage()));
+                }
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
+    public void deleteCategory(int categoryId, Callback<Void> callback) {
+        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/categories?id=eq." + categoryId;
+        
+        Request request = new Request.Builder()
+            .url(url)
+            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+            .delete()
+            .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    mainHandler.post(() -> callback.onSuccess(null));
+                } else {
+                    mainHandler.post(() -> callback.onError("Failed to delete category"));
+                }
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
+    public void getUsers(Callback<List<User>> callback) {
+        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/users?select=*&order=email.asc";
+        
+        Request request = new Request.Builder()
+            .url(url)
+            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+            .get()
+            .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    String responseBody = response.body().string();
+                    if (response.isSuccessful()) {
+                        JsonArray array = gson.fromJson(responseBody, JsonArray.class);
+                        List<User> users = new ArrayList<>();
+                        for (int i = 0; i < array.size(); i++) {
+                            JsonObject json = array.get(i).getAsJsonObject();
+                            User user = new User();
+                            user.setId(json.has("id") ? json.get("id").getAsString() : "");
+                            user.setEmail(json.has("email") ? json.get("email").getAsString() : "");
+                            users.add(user);
+                        }
+                        mainHandler.post(() -> callback.onSuccess(users));
+                    } else {
+                        mainHandler.post(() -> callback.onError("Failed to load users"));
+                    }
+                } catch (Exception e) {
+                    mainHandler.post(() -> callback.onError(e.getMessage()));
+                }
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
+    private Item parseItem(JsonObject json) {
+        Item item = new Item();
+        item.setId(json.has("id") ? json.get("id").getAsInt() : 0);
+        item.setName(json.has("name") && !json.get("name").isJsonNull() ? json.get("name").getAsString() : "");
+        item.setSku(json.has("sku") && !json.get("sku").isJsonNull() ? json.get("sku").getAsString() : "");
+        item.setUnitPrice(json.has("unit_price") && !json.get("unit_price").isJsonNull() ? json.get("unit_price").getAsDouble() : 0.0);
+        item.setCost(json.has("cost") && !json.get("cost").isJsonNull() ? json.get("cost").getAsDouble() : 0.0);
+        item.setQuantity(json.has("quantity") && !json.get("quantity").isJsonNull() ? json.get("quantity").getAsInt() : 0);
+        item.setMinStockLevel(json.has("min_stock_level") && !json.get("min_stock_level").isJsonNull() ? json.get("min_stock_level").getAsInt() : 0);
+        item.setActive(json.has("is_active") && !json.get("is_active").isJsonNull() ? json.get("is_active").getAsBoolean() : true);
+        item.setService(json.has("is_service") && !json.get("is_service").isJsonNull() ? json.get("is_service").getAsBoolean() : false);
+        if (json.has("category_id") && !json.get("category_id").isJsonNull()) {
+            item.setCategoryId(json.get("category_id").getAsInt());
+        }
+        if (json.has("categories") && !json.get("categories").isJsonNull()) {
+            JsonObject catJson = json.getAsJsonObject("categories");
+            item.setCategoryName(catJson.has("name") ? catJson.get("name").getAsString() : "");
+        }
+        return item;
+    }
 }

@@ -7,6 +7,7 @@ public class Item {
     private Integer categoryId;
     private String categoryName;
     private double unitPrice;
+    private double cost;
     private int quantity;
     private int minStockLevel;
     private boolean isActive;
@@ -25,6 +26,8 @@ public class Item {
     public void setCategoryName(String categoryName) { this.categoryName = categoryName; }
     public double getUnitPrice() { return unitPrice; }
     public void setUnitPrice(double unitPrice) { this.unitPrice = unitPrice; }
+    public double getCost() { return cost; }
+    public void setCost(double cost) { this.cost = cost; }
     public int getQuantity() { return quantity; }
     public void setQuantity(int quantity) { this.quantity = quantity; }
     public int getMinStockLevel() { return minStockLevel; }
