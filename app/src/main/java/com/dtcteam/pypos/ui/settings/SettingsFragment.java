@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 
 import com.dtcteam.pypos.R;
+import com.dtcteam.pypos.ThemeManager;
 import com.dtcteam.pypos.api.ApiService;
 import com.dtcteam.pypos.databinding.BottomSheetPinBinding;
 import com.dtcteam.pypos.databinding.FragmentSettingsBinding;
@@ -70,27 +71,18 @@ public class SettingsFragment extends Fragment {
     }
 
     private void updateThemeText() {
-        int themeMode = prefs.getInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-        switch (themeMode) {
-            case AppCompatDelegate.MODE_NIGHT_NO:
-                binding.tvThemeSelection.setText("Light");
-                break;
-            case AppCompatDelegate.MODE_NIGHT_YES:
-                binding.tvThemeSelection.setText("Dark");
-                break;
-            default:
-                binding.tvThemeSelection.setText("System Default");
-                break;
-        }
+        ThemeManager tm = ThemeManager.getInstance(requireContext());
+        binding.tvThemeSelection.setText(tm.getThemeName());
     }
 
     private void showThemeSelectionDialog() {
+        ThemeManager tm = ThemeManager.getInstance(requireContext());
         String[] themes = {"Light", "Dark", "System Default"};
-        int themeMode = prefs.getInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        int currentMode = tm.getThemeMode();
         
         int checkedItem = 2; // Default
-        if (themeMode == AppCompatDelegate.MODE_NIGHT_NO) checkedItem = 0;
-        else if (themeMode == AppCompatDelegate.MODE_NIGHT_YES) checkedItem = 1;
+        if (currentMode == ThemeManager.THEME_LIGHT) checkedItem = 0;
+        else if (currentMode == ThemeManager.THEME_DARK) checkedItem = 1;
 
         new AlertDialog.Builder(requireContext(), com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog_Centered)
             .setTitle("Choose Theme")
@@ -98,21 +90,36 @@ public class SettingsFragment extends Fragment {
                 int selectedMode;
                 switch (which) {
                     case 0:
-                        selectedMode = AppCompatDelegate.MODE_NIGHT_NO;
+                        selectedMode = ThemeManager.THEME_LIGHT;
                         break;
                     case 1:
-                        selectedMode = AppCompatDelegate.MODE_NIGHT_YES;
+                        selectedMode = ThemeManager.THEME_DARK;
                         break;
                     default:
-                        selectedMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
+                        selectedMode = ThemeManager.THEME_SYSTEM;
                         break;
                 }
                 
-                prefs.edit().putInt("theme_mode", selectedMode).apply();
-                AppCompatDelegate.setDefaultNightMode(selectedMode);
+                // Save preference first
+                tm.setThemeMode(selectedMode);
                 updateThemeText();
+                
+                // Apply theme change immediately without recreation
+                switch (selectedMode) {
+                    case ThemeManager.THEME_LIGHT:
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                        break;
+                    case ThemeManager.THEME_DARK:
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                        break;
+                    default:
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                        break;
+                }
+                
                 dialog.dismiss();
             })
+            .setNegativeButton("Cancel", null)
             .show();
     }
 

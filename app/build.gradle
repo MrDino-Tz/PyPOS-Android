@@ -40,6 +40,7 @@ dependencies {
     implementation libs.constraintlayout
     implementation libs.drawerlayout
     implementation libs.biometric
+    implementation libs.swiperefreshlayout
     
     implementation libs.okhttp
     implementation libs.gson

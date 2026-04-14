@@ -56,8 +56,19 @@ public class PosFragment extends Fragment {
         setupSearch();
         loadData();
         
+        binding.cartFab.setOnClickListener(v -> showCartOverlay());
         binding.btnClearCart.setOnClickListener(v -> clearCart());
         binding.btnCheckout.setOnClickListener(v -> showCheckoutDialog());
+        binding.btnCloseCart.setOnClickListener(v -> hideCartOverlay());
+        binding.cartOverlay.setOnClickListener(v -> hideCartOverlay());
+    }
+
+    private void showCartOverlay() {
+        binding.cartOverlay.setVisibility(View.VISIBLE);
+    }
+    
+    private void hideCartOverlay() {
+        binding.cartOverlay.setVisibility(View.GONE);
     }
 
     private void setupRecyclerViews() {
@@ -362,16 +373,32 @@ public class PosFragment extends Fragment {
     }
 
     private void updateTotal() {
-        double total = 0;
+        double subtotal = 0;
         int count = 0;
         for (CartItem item : cart) {
-            total += item.getSubtotal();
+            subtotal += item.getSubtotal();
             count += item.getQuantity();
         }
         
+        double tax = subtotal * 0.10; // 10% tax
+        double discount = 0;
+        double total = subtotal + tax - discount;
+        
         java.text.NumberFormat nf = java.text.NumberFormat.getNumberInstance(java.util.Locale.US);
+        
         binding.tvTotal.setText("TSH " + nf.format((long) total));
-        binding.tvCartCount.setText("(" + count + " items)");
+        binding.tvSubtotal.setText("TSH " + nf.format((long) subtotal));
+        binding.tvTax.setText("TSH " + nf.format((long) tax));
+        binding.tvDiscount.setText("TSH " + nf.format((long) discount));
+        
+        // Show/hide FAB based on cart
+        if (cart.isEmpty()) {
+            binding.cartFab.setVisibility(View.GONE);
+        } else {
+            binding.cartFab.setVisibility(View.VISIBLE);
+            binding.tvCartFabTotal.setText("TSH " + nf.format((long) total));
+        }
+        
         binding.btnCheckout.setEnabled(!cart.isEmpty());
     }
 

@@ -95,6 +95,14 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
+    <CheckBox
+        android:id="@+id/cbIsService"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="This is a service (no stock)"
+        android:textColor="@color/text_primary" />
+
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilQuantity"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"

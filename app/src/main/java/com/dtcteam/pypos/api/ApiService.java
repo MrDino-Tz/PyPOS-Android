@@ -511,7 +511,7 @@ public class ApiService {
     }
 
     public void getLowStockItems(Callback<List<Item>> callback) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/items?select=*&quantity.lt.min_stock_level&order=quantity.asc";
+        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/items?select=*&quantity.lt.min_stock_level&is_service.eq.false&order=quantity.asc";
         
         Request request = new Request.Builder()
             .url(url)
@@ -846,5 +846,89 @@ public class ApiService {
             item.setCategoryName(catJson.has("name") ? catJson.get("name").getAsString() : "");
         }
         return item;
+    }
+
+    public void createStockMovement(StockMovement movement, Callback<Void> callback) {
+        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/stock_movements";
+        
+        JsonObject body = new JsonObject();
+        body.addProperty("item_id", movement.getItemId());
+        body.addProperty("type", movement.getType());
+        body.addProperty("quantity", movement.getQuantity());
+        if (movement.getReference() != null) body.addProperty("reference", movement.getReference());
+        if (movement.getNotes() != null) body.addProperty("notes", movement.getNotes());
+
+        Request request = new Request.Builder()
+            .url(url)
+            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+            .post(RequestBody.create(body.toString(), SupabaseClient.JSON))
+            .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    mainHandler.post(() -> callback.onSuccess(null));
+                } else {
+                    mainHandler.post(() -> callback.onError("Failed to create movement"));
+                }
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
+    public void getStockMovements(Callback<List<StockMovement>> callback) {
+        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/stock_movements?select=*,items(name)&order=created_at.desc&limit=50";
+        
+        Request request = new Request.Builder()
+            .url(url)
+            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+            .get()
+            .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    String responseBody = response.body().string();
+                    if (response.isSuccessful()) {
+                        JsonArray array = gson.fromJson(responseBody, JsonArray.class);
+                        List<StockMovement> movements = new ArrayList<>();
+                        for (int i = 0; i < array.size(); i++) {
+                            JsonObject json = array.get(i).getAsJsonObject();
+                            StockMovement sm = new StockMovement();
+                            sm.setId(json.has("id") ? json.get("id").getAsInt() : 0);
+                            sm.setItemId(json.has("item_id") ? json.get("item_id").getAsInt() : 0);
+                            sm.setType(json.has("type") && !json.get("type").isJsonNull() ? json.get("type").getAsString() : "");
+                            sm.setQuantity(json.has("quantity") ? json.get("quantity").getAsInt() : 0);
+                            sm.setReference(json.has("reference") && !json.get("reference").isJsonNull() ? json.get("reference").getAsString() : null);
+                            sm.setNotes(json.has("notes") && !json.get("notes").isJsonNull() ? json.get("notes").getAsString() : null);
+                            sm.setCreatedAt(json.has("created_at") && !json.get("created_at").isJsonNull() ? json.get("created_at").getAsString() : "");
+                            if (json.has("items") && !json.get("items").isJsonNull()) {
+                                JsonObject itemJson = json.getAsJsonObject("items");
+                                sm.setItemName(itemJson.has("name") ? itemJson.get("name").getAsString() : "");
+                            }
+                            movements.add(sm);
+                        }
+                        mainHandler.post(() -> callback.onSuccess(movements));
+                    } else {
+                        mainHandler.post(() -> callback.onError("Failed to load movements"));
+                    }
+                } catch (Exception e) {
+                    mainHandler.post(() -> callback.onError(e.getMessage()));
+                }
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
     }
 }

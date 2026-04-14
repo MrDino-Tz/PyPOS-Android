@@ -6,10 +6,12 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.CheckBox;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.dtcteam.pypos.R;
 import com.dtcteam.pypos.api.ApiService;
 import com.dtcteam.pypos.databinding.ActivityItemsBinding;
@@ -20,6 +22,8 @@ import com.dtcteam.pypos.ui.common.SkeletonAdapter;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,10 +80,10 @@ public class ItemsActivity extends AppCompatActivity {
 
     private void setupListeners() {
         binding.btnBack.setOnClickListener(v -> finish());
-        binding.fabAdd.setOnClickListener(v -> showItemDialog(null));
+        binding.fabAdd.setVisibility(View.GONE);
         
         binding.btnImport.setOnClickListener(v -> {
-            Toast.makeText(this, "Import feature - Coming soon", Toast.LENGTH_SHORT).show();
+            importItems();
         });
         
         binding.btnExport.setOnClickListener(v -> {
@@ -100,24 +104,52 @@ public class ItemsActivity extends AppCompatActivity {
                 filterItems(s.toString());
             }
         });
+        
+        binding.swipeRefresh.setOnRefreshListener(() -> {
+            loadItems();
+        });
     }
     
     private void filterItems(String query) {
-        if (query.isEmpty()) {
-            adapter.setItems(items);
-            return;
-        }
-        
-        String search = query.toLowerCase();
+        filterItems(query, binding.actvCategory.getText().toString());
+    }
+    
+    private void filterItems(String query, String category) {
         ArrayList<Item> filtered = new ArrayList<>();
+        
         for (Item item : items) {
-            if (item.getName().toLowerCase().contains(search) || 
-                item.getSku().toLowerCase().contains(search) ||
-                (item.getCategoryName() != null && item.getCategoryName().toLowerCase().contains(search))) {
+            boolean matchesSearch = query.isEmpty() || 
+                item.getName().toLowerCase().contains(query.toLowerCase()) || 
+                item.getSku().toLowerCase().contains(query.toLowerCase()) ||
+                (item.getCategoryName() != null && item.getCategoryName().toLowerCase().contains(query.toLowerCase()));
+            
+            boolean matchesCategory = category.isEmpty() || category.equals("All") ||
+                (item.getCategoryName() != null && item.getCategoryName().equals(category));
+            
+            if (matchesSearch && matchesCategory) {
                 filtered.add(item);
             }
         }
         adapter.setItems(filtered);
+    }
+
+    private void setupCategoryFilter() {
+        ArrayList<String> categoryNames = new ArrayList<>();
+        categoryNames.add("All");
+        for (Category cat : categories) {
+            categoryNames.add(cat.getName());
+        }
+        
+        ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(this, 
+            android.R.layout.simple_dropdown_item_1line, categoryNames);
+        binding.actvCategory.setAdapter(categoryAdapter);
+        
+        binding.actvCategory.setOnItemClickListener((parent, view, position, id) -> {
+            String selected = (String) parent.getItemAtPosition(position);
+            filterItems(binding.etSearch.getText().toString(), selected);
+        });
+        
+        binding.actvCategory.setText("All", false);
     }
 
     private void loadItemsFromApi() {
@@ -128,18 +160,21 @@ public class ItemsActivity extends AppCompatActivity {
             @Override
             public void onSuccess(List<Item> result) {
                 binding.loadingIndicator.setVisibility(View.GONE);
+                binding.swipeRefresh.setRefreshing(false);
                 showSkeleton(false);
                 items.clear();
                 if (result != null) {
                     for (Item item : result) {
+                        // Exclude services from items list
                         if (!item.isService()) {
                             items.add(item);
                         }
                     }
                 }
                 String search = binding.etSearch.getText() != null ? binding.etSearch.getText().toString() : "";
-                if (!search.isEmpty()) {
-                    filterItems(search);
+                String category = binding.actvCategory.getText() != null ? binding.actvCategory.getText().toString() : "";
+                if (!search.isEmpty() || !category.isEmpty()) {
+                    filterItems(search, category);
                 } else {
                     adapter.setItems(items);
                 }
@@ -148,6 +183,7 @@ public class ItemsActivity extends AppCompatActivity {
             @Override
             public void onError(String error) {
                 binding.loadingIndicator.setVisibility(View.GONE);
+                binding.swipeRefresh.setRefreshing(false);
                 showSkeleton(false);
                 Toast.makeText(ItemsActivity.this, error, Toast.LENGTH_SHORT).show();
             }
@@ -162,6 +198,7 @@ public class ItemsActivity extends AppCompatActivity {
                 if (result != null) {
                     categories.addAll(result);
                 }
+                setupCategoryFilter();
             }
 
             @Override
@@ -188,6 +225,9 @@ public class ItemsActivity extends AppCompatActivity {
         TextInputEditText etCost = dialogBinding.etCost;
         TextInputEditText etQuantity = dialogBinding.etQuantity;
         TextInputEditText etMinStock = dialogBinding.etMinStock;
+        CheckBox cbIsService = dialogBinding.cbIsService;
+        TextInputLayout tilQuantity = dialogBinding.tilQuantity;
+        TextInputLayout tilMinStock = dialogBinding.tilMinStock;
         MaterialButton btnCancel = dialogBinding.btnCancel;
         MaterialButton btnSave = dialogBinding.btnSave;
 
@@ -205,10 +245,20 @@ public class ItemsActivity extends AppCompatActivity {
             etCost.setText(String.valueOf(item.getCost()));
             etQuantity.setText(String.valueOf(item.getQuantity()));
             etMinStock.setText(String.valueOf(item.getMinStockLevel()));
+            cbIsService.setChecked(item.isService());
             if (item.getCategoryName() != null) {
                 actvCategory.setText(item.getCategoryName(), false);
             }
+            // Show/hide stock fields based on service status
+            tilQuantity.setVisibility(item.isService() ? View.GONE : View.VISIBLE);
+            tilMinStock.setVisibility(item.isService() ? View.GONE : View.VISIBLE);
         }
+
+        // Show/hide stock fields when checkbox changes
+        cbIsService.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            tilQuantity.setVisibility(isChecked ? View.GONE : View.VISIBLE);
+            tilMinStock.setVisibility(isChecked ? View.GONE : View.VISIBLE);
+        });
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
         btnSave.setOnClickListener(v -> {
@@ -252,11 +302,12 @@ public class ItemsActivity extends AppCompatActivity {
             newItem.setSku(sku);
             newItem.setUnitPrice(price);
             newItem.setCost(cost);
-            newItem.setQuantity(quantity);
-            newItem.setMinStockLevel(minStock);
+            // For services, quantity and min stock should be 0
+            newItem.setQuantity(cbIsService.isChecked() ? 0 : quantity);
+            newItem.setMinStockLevel(cbIsService.isChecked() ? 0 : minStock);
             newItem.setCategoryId(categoryId);
             newItem.setActive(true);
-            newItem.setService(false);
+            newItem.setService(cbIsService.isChecked());
 
             if (item != null) {
                 newItem.setId(item.getId());
@@ -359,5 +410,72 @@ public class ItemsActivity extends AppCompatActivity {
         } catch (Exception e) {
             Toast.makeText(this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
+    }
+    
+    private void importItems() {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Import Items")
+            .setMessage("To import items, place a CSV file named 'import_items.csv' in the app's internal storage.\n\nCSV format:\nSKU,Name,Category,Unit Price,Cost,Stock,Min Stock,Active,Service")
+            .setPositiveButton("Import from File", (dialog, which) -> {
+                try {
+                    java.io.FileInputStream fis = openFileInput("import_items.csv");
+                    java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
+                    String line;
+                    int imported = 0;
+                    int failed = 0;
+                    
+                    boolean isFirstLine = true;
+                    while ((line = reader.readLine()) != null) {
+                        if (isFirstLine) {
+                            isFirstLine = false;
+                            continue;
+                        }
+                        
+                        String[] parts = line.split(",");
+                        if (parts.length >= 5) {
+                            Item item = new Item();
+                            try {
+                                if (parts.length > 0) item.setSku(parts[0].replace("\"", ""));
+                                if (parts.length > 1) item.setName(parts[1].replace("\"", ""));
+                                if (parts.length > 2) {
+                                    String catName = parts[2].replace("\"", "");
+                                    for (Category cat : categories) {
+                                        if (cat.getName().equals(catName)) {
+                                            item.setCategoryId(cat.getId());
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (parts.length > 3) item.setUnitPrice(Double.parseDouble(parts[3]));
+                                if (parts.length > 4) item.setCost(Double.parseDouble(parts[4]));
+                                if (parts.length > 5) item.setQuantity(Integer.parseInt(parts[5]));
+                                if (parts.length > 6) item.setMinStockLevel(Integer.parseInt(parts[6]));
+                                item.setActive(true);
+                                item.setService(false);
+                                
+                                api.createItem(item, new ApiService.Callback<Item>() {
+                                    @Override
+                                    public void onSuccess(Item result) {}
+
+                                    @Override
+                                    public void onError(String error) {}
+                                });
+                                imported++;
+                            } catch (Exception e) {
+                                failed++;
+                            }
+                        }
+                    }
+                    reader.close();
+                    fis.close();
+                    
+                    Toast.makeText(this, "Imported " + imported + " items" + (failed > 0 ? ", " + failed + " failed" : ""), Toast.LENGTH_LONG).show();
+                    loadItems();
+                } catch (Exception e) {
+                    Toast.makeText(this, "No import file found or error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
     }
 }

@@ -6,11 +6,14 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.dtcteam.pypos.R;
 import com.dtcteam.pypos.api.ApiService;
 import com.dtcteam.pypos.databinding.ActivityReportsBinding;
 import com.dtcteam.pypos.model.Sale;
 import com.dtcteam.pypos.ui.sales.SalesAdapter;
+import com.dtcteam.pypos.ui.common.SkeletonAdapter;
+import com.google.android.material.tabs.TabLayout;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +25,7 @@ public class ReportsActivity extends AppCompatActivity {
     private final ApiService api = ApiService.getInstance();
     private ArrayList<Sale> sales = new ArrayList<>();
     private SalesAdapter adapter;
+    private SkeletonAdapter skeletonAdapter;
     private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("sw", "TZ"));
 
     @Override
@@ -30,8 +34,33 @@ public class ReportsActivity extends AppCompatActivity {
         binding = ActivityReportsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        skeletonAdapter = new SkeletonAdapter();
+        skeletonAdapter.setLayoutResId(R.layout.item_row_skeleton);
+        skeletonAdapter.setItemCount(5);
+        
+        setupRecyclerView();
         setupListeners();
+        showSkeleton(true);
         loadSales();
+    }
+
+    private void showSkeleton(boolean show) {
+        if (show) {
+            binding.monthlyBreakdownRecycler.setAdapter(skeletonAdapter);
+            binding.stockArrivalsRecycler.setAdapter(skeletonAdapter);
+        } else {
+            binding.monthlyBreakdownRecycler.setAdapter(adapter);
+            binding.stockArrivalsRecycler.setAdapter(adapter);
+        }
+    }
+
+    private void setupRecyclerView() {
+        adapter = new SalesAdapter();
+        binding.monthlyBreakdownRecycler.setLayoutManager(new LinearLayoutManager(this));
+        binding.monthlyBreakdownRecycler.setAdapter(adapter);
+        
+        binding.stockArrivalsRecycler.setLayoutManager(new LinearLayoutManager(this));
+        binding.stockArrivalsRecycler.setAdapter(adapter);
     }
 
     private void setupListeners() {
@@ -40,6 +69,77 @@ public class ReportsActivity extends AppCompatActivity {
         binding.btnExportAll.setOnClickListener(v -> {
             exportAllReports();
         });
+        
+        binding.tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                loadTabData(tab.getPosition());
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {}
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {}
+        });
+        
+        binding.swipeRefresh.setOnRefreshListener(() -> {
+            loadSales();
+        });
+    }
+    
+    private void loadTabData(int position) {
+        switch (position) {
+            case 0:
+                loadDailyData();
+                break;
+            case 1:
+                loadMonthlyData();
+                break;
+            case 2:
+                loadStockData();
+                break;
+        }
+    }
+    
+    private void loadDailyData() {
+        double todayTotal = 0;
+        int todayCount = 0;
+        String today = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new java.util.Date());
+        
+        for (Sale sale : sales) {
+            if (sale.getCreatedAt() != null && sale.getCreatedAt().startsWith(today)) {
+                todayTotal += sale.getFinalAmount();
+                todayCount++;
+            }
+        }
+        
+        binding.tvTodaySales.setText(currencyFormat.format(todayTotal));
+        binding.tvTodayTransactions.setText(todayCount + " transactions");
+        binding.tvMonthlyRevenue.setText(currencyFormat.format(todayTotal));
+    }
+    
+    private void loadMonthlyData() {
+        double monthlyTotal = 0;
+        int monthlyCount = 0;
+        String thisMonth = new java.text.SimpleDateFormat("yyyy-MM", Locale.US).format(new java.util.Date());
+        
+        for (Sale sale : sales) {
+            if (sale.getCreatedAt() != null && sale.getCreatedAt().startsWith(thisMonth)) {
+                monthlyTotal += sale.getFinalAmount();
+                monthlyCount++;
+            }
+        }
+        
+        binding.tvTodaySales.setText(currencyFormat.format(monthlyTotal));
+        binding.tvTodayTransactions.setText(monthlyCount + " transactions");
+        binding.tvMonthlyRevenue.setText(currencyFormat.format(monthlyTotal));
+    }
+    
+    private void loadStockData() {
+        binding.tvTodaySales.setText("Stock Overview");
+        binding.tvTodayTransactions.setText(sales.size() + " sales records");
+        binding.tvMonthlyRevenue.setText("Stock movements");
     }
     
     private void exportAllReports() {
@@ -73,11 +173,13 @@ public class ReportsActivity extends AppCompatActivity {
 
     private void loadSales() {
         binding.loadingIndicator.setVisibility(View.VISIBLE);
+        showSkeleton(true);
         
         api.getSales(new ApiService.Callback<List<Sale>>() {
             @Override
             public void onSuccess(List<Sale> result) {
                 binding.loadingIndicator.setVisibility(View.GONE);
+                showSkeleton(false);
                 sales.clear();
                 double todayTotal = 0;
                 double totalSales = 0;

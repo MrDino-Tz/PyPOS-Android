@@ -8,6 +8,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.dtcteam.pypos.R;
 import com.dtcteam.pypos.api.ApiService;
 import com.dtcteam.pypos.databinding.ActivityCategoriesBinding;
@@ -93,6 +94,10 @@ public class CategoriesActivity extends AppCompatActivity {
                 filterCategories(s.toString());
             }
         });
+        
+        binding.swipeRefresh.setOnRefreshListener(() -> {
+            loadCategories();
+        });
     }
     
     private void filterCategories(String query) {
@@ -146,6 +151,7 @@ public class CategoriesActivity extends AppCompatActivity {
             @Override
             public void onSuccess(List<Category> result) {
                 binding.loadingIndicator.setVisibility(View.GONE);
+                binding.swipeRefresh.setRefreshing(false);
                 showSkeleton(false);
                 categories.clear();
                 if (result != null) {
@@ -162,6 +168,7 @@ public class CategoriesActivity extends AppCompatActivity {
             @Override
             public void onError(String error) {
                 binding.loadingIndicator.setVisibility(View.GONE);
+                binding.swipeRefresh.setRefreshing(false);
                 showSkeleton(false);
                 Toast.makeText(CategoriesActivity.this, error, Toast.LENGTH_SHORT).show();
             }
