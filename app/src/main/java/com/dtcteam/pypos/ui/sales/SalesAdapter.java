@@ -58,9 +58,26 @@ public class SalesAdapter extends RecyclerView.Adapter<SalesAdapter.ViewHolder> 
         void bind(Sale sale) {
             Locale usLocale = new Locale("en", "US");
             tvSaleId.setText("#" + String.format("%05d", sale.getId()));
-            tvDate.setText(sale.getCreatedAt());
+            
+            String dateStr = sale.getCreatedAt();
+            if (dateStr != null && dateStr.length() > 10) {
+                try {
+                    java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
+                    java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("MMM dd, yyyy, hh:mm a", Locale.US);
+                    java.util.Date date = inputFormat.parse(dateStr);
+                    if (date != null) {
+                        dateStr = outputFormat.format(date);
+                    }
+                } catch (Exception e) {
+                    // Keep original format
+                }
+            }
+            tvDate.setText(dateStr);
+            
             tvAmount.setText("TSH " + String.format(usLocale, "%,d", (long) sale.getFinalAmount()));
-            tvItems.setText(sale.getSaleItems().size() + " items");
+            
+            int itemCount = sale.getSaleItems() != null ? sale.getSaleItems().size() : 0;
+            tvItems.setText(itemCount + " items");
         }
     }
 }
