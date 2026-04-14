@@ -37,6 +37,10 @@ public class ApiService {
         void onSuccess(T result);
         void onError(String error);
     }
+    
+    public interface StringCallback {
+        void onError(String error);
+    }
 
     public void login(String email, String password, Callback<User> callback) {
         JsonObject body = new JsonObject();
@@ -405,6 +409,7 @@ public class ApiService {
             .url(url)
             .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+            .addHeader("Prefer", "return=representation")
             .post(RequestBody.create(saleBody.toString(), SupabaseClient.JSON))
             .build();
 
@@ -413,17 +418,27 @@ public class ApiService {
             public void onResponse(Call call, Response response) throws IOException {
                 try {
                     String responseBody = response.body().string();
+                    android.util.Log.d("PyPOS", "Sale created response: " + response.code() + " - " + responseBody);
+                    
                     if (response.isSuccessful()) {
-                        JsonObject saleJson = gson.fromJson(responseBody, JsonObject.class);
-                        Sale sale = new Sale();
-                        sale.setId(saleJson.get("id").getAsInt());
-                        sale.setTotalAmount(saleJson.get("total_amount").getAsDouble());
-                        sale.setFinalAmount(saleJson.get("final_amount").getAsDouble());
-                        mainHandler.post(() -> callback.onSuccess(sale));
+                        JsonArray saleArray = gson.fromJson(responseBody, JsonArray.class);
+                        JsonObject saleJson = saleArray.get(0).getAsJsonObject();
+                        int saleId = saleJson.get("id").getAsInt();
+                        
+                        createSaleItemsAndDeductStock(saleId, items, () -> {
+                            Sale sale = new Sale();
+                            sale.setId(saleId);
+                            sale.setTotalAmount(saleJson.get("total_amount").getAsDouble());
+                            sale.setFinalAmount(saleJson.get("final_amount").getAsDouble());
+                            mainHandler.post(() -> callback.onSuccess(sale));
+                        }, error -> {
+                            mainHandler.post(() -> callback.onError(error));
+                        });
                     } else {
-                        mainHandler.post(() -> callback.onError("Failed to create sale"));
+                        mainHandler.post(() -> callback.onError("Failed to create sale: " + response.code()));
                     }
                 } catch (Exception e) {
+                    android.util.Log.e("PyPOS", "Error creating sale", e);
                     mainHandler.post(() -> callback.onError(e.getMessage()));
                 }
             }
@@ -433,6 +448,146 @@ public class ApiService {
                 mainHandler.post(() -> callback.onError(e.getMessage()));
             }
         });
+    }
+    
+    private void createSaleItemsAndDeductStock(int saleId, List<Map<String, Object>> items, Runnable onComplete, StringCallback onError) {
+        if (items.isEmpty()) {
+            onComplete.run();
+            return;
+        }
+        
+        final int[] completed = {0};
+        final boolean[] hasError = {false};
+        
+        for (Map<String, Object> itemData : items) {
+            int itemId = ((Number) itemData.get("item_id")).intValue();
+            int quantity = ((Number) itemData.get("quantity")).intValue();
+            double unitPrice = ((Number) itemData.get("unit_price")).doubleValue();
+            double subtotal = quantity * unitPrice;
+            
+            JsonObject saleItemBody = new JsonObject();
+            saleItemBody.addProperty("sale_id", saleId);
+            saleItemBody.addProperty("item_id", itemId);
+            saleItemBody.addProperty("quantity", quantity);
+            saleItemBody.addProperty("unit_price", unitPrice);
+            saleItemBody.addProperty("subtotal", subtotal);
+            
+            String saleItemUrl = SupabaseClient.getSUPABASE_URL() + "/rest/v1/sale_items";
+            
+            Request saleItemRequest = new Request.Builder()
+                .url(saleItemUrl)
+                .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+                .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+                .post(RequestBody.create(saleItemBody.toString(), SupabaseClient.JSON))
+                .build();
+            
+            client.newCall(saleItemRequest).enqueue(new okhttp3.Callback() {
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (!response.isSuccessful()) {
+                        android.util.Log.e("PyPOS", "Failed to create sale item: " + response.code());
+                        hasError[0] = true;
+                    }
+                    
+                    checkComplete();
+                }
+
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    android.util.Log.e("PyPOS", "Error creating sale item", e);
+                    hasError[0] = true;
+                    checkComplete();
+                }
+                
+                private void checkComplete() {
+                    completed[0]++;
+                    if (completed[0] == items.size()) {
+                        if (hasError[0]) {
+                            // Continue anyway - sale was created
+                        }
+                        // Deduct stock for each item
+                        deductStock(items, 0, onComplete);
+                    }
+                }
+            });
+        }
+    }
+    
+    private void deductStock(List<Map<String, Object>> items, int index, Runnable onComplete) {
+        if (index >= items.size()) {
+            onComplete.run();
+            return;
+        }
+        
+        int itemId = ((Number) items.get(index).get("item_id")).intValue();
+        int quantity = ((Number) items.get(index).get("quantity")).intValue();
+        
+        getItemStock(itemId, currentQty -> {
+            int newQty = Math.max(0, currentQty - quantity);
+            updateItemStock(itemId, newQty, () -> deductStock(items, index + 1, onComplete));
+        });
+    }
+    
+    private void getItemStock(int itemId, onStockLoaded callback) {
+        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/items?id=eq." + itemId + "&select=quantity";
+        
+        Request request = new Request.Builder()
+            .url(url)
+            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+            .get()
+            .build();
+        
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String body = response.body().string();
+                if (response.isSuccessful() && body.length() > 2) {
+                    JsonArray arr = gson.fromJson(body, JsonArray.class);
+                    if (arr.size() > 0) {
+                        int qty = arr.get(0).getAsJsonObject().get("quantity").getAsInt();
+                        callback.onLoaded(qty);
+                        return;
+                    }
+                }
+                callback.onLoaded(0);
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                callback.onLoaded(0);
+            }
+        });
+    }
+    
+    private void updateItemStock(int itemId, int quantity, Runnable onComplete) {
+        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/items?id=eq." + itemId;
+        
+        JsonObject body = new JsonObject();
+        body.addProperty("quantity", quantity);
+        
+        Request request = new Request.Builder()
+            .url(url)
+            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+            .patch(RequestBody.create(body.toString(), SupabaseClient.JSON))
+            .build();
+        
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                onComplete.run();
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                onComplete.run();
+            }
+        });
+    }
+    
+    interface onStockLoaded {
+        void onLoaded(int quantity);
     }
 
     public void getDashboardStats(Callback<DashboardStats> callback) {

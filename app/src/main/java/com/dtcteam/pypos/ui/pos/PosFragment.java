@@ -22,6 +22,7 @@ import com.dtcteam.pypos.model.Category;
 import com.dtcteam.pypos.model.Item;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,13 +55,59 @@ public class PosFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         setupRecyclerViews();
         setupSearch();
+        setupPaymentInput();
         loadData();
         
         binding.cartFab.setOnClickListener(v -> showCartOverlay());
         binding.btnClearCart.setOnClickListener(v -> clearCart());
-        binding.btnCheckout.setOnClickListener(v -> showCheckoutDialog());
+        binding.btnCheckout.setOnClickListener(v -> {
+            android.util.Log.d("PyPOS", "Checkout button clicked");
+            processCheckout();
+        });
         binding.btnCloseCart.setOnClickListener(v -> hideCartOverlay());
+        
         binding.cartOverlay.setOnClickListener(v -> hideCartOverlay());
+    }
+
+    private void setupPaymentInput() {
+        binding.etPayment.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                updatePaymentDisplay();
+            }
+        });
+    }
+
+    private void updatePaymentDisplay() {
+        double total = getTotal();
+        String paymentStr = binding.etPayment.getText() != null ? binding.etPayment.getText().toString() : "";
+        double payment = paymentStr.isEmpty() ? 0 : Double.parseDouble(paymentStr);
+        
+        java.text.NumberFormat nf = java.text.NumberFormat.getNumberInstance(java.util.Locale.US);
+        
+        if (payment >= total && total > 0) {
+            binding.changeLayout.setVisibility(View.VISIBLE);
+            binding.remainingLayout.setVisibility(View.GONE);
+            double change = payment - total;
+            binding.tvChange.setText("TSH " + nf.format((long) change));
+            binding.btnCheckout.setEnabled(true);
+        } else if (payment > 0 && payment < total && total > 0) {
+            binding.changeLayout.setVisibility(View.GONE);
+            binding.remainingLayout.setVisibility(View.VISIBLE);
+            double remaining = total - payment;
+            binding.tvRemaining.setText("Remaining: TSH " + nf.format((long) remaining));
+            binding.btnCheckout.setEnabled(false);
+        } else {
+            binding.changeLayout.setVisibility(View.GONE);
+            binding.remainingLayout.setVisibility(View.GONE);
+            binding.btnCheckout.setEnabled(!cart.isEmpty());
+        }
     }
 
     private void showCartOverlay() {
@@ -112,7 +159,10 @@ public class PosFragment extends Fragment {
             @Override
             public void onError(String error) {
                 binding.loadingIndicator.setVisibility(View.GONE);
-                Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show();
+                Snackbar.make(binding.getRoot(), error, Snackbar.LENGTH_SHORT)
+                    .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.danger))
+                    .setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
+                    .show();
             }
         });
     }
@@ -137,13 +187,15 @@ public class PosFragment extends Fragment {
                     }
                 }
                 
-                serviceItems = services;
-                items = regularItems;
+                serviceItems.clear();
+                serviceItems.addAll(services);
+                items.clear();
+                items.addAll(regularItems);
                 
                 // Separate primary and other services
                 primaryServices.clear();
                 otherServices.clear();
-                for (Item service : services) {
+                for (Item service : serviceItems) {
                     boolean isPrimary = false;
                     for (String main : mainServices) {
                         if (service.getName().toLowerCase().contains(main)) {
@@ -318,7 +370,10 @@ public class PosFragment extends Fragment {
                     cartItem.setQuantity(cartItem.getQuantity() + 1);
                     cartItem.setSubtotal(cartItem.getQuantity() * cartItem.getUnitPrice());
                 } else {
-                    Toast.makeText(requireContext(), "Not enough stock", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(binding.getRoot(), "Not enough stock", Snackbar.LENGTH_SHORT)
+                        .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.warning))
+                        .setTextColor(ContextCompat.getColor(requireContext(), R.color.gray_900))
+                        .show();
                 }
                 cartAdapter.notifyDataSetChanged();
                 updateTotal();
@@ -340,7 +395,10 @@ public class PosFragment extends Fragment {
             cartAdapter.notifyDataSetChanged();
             updateTotal();
         } else {
-            Toast.makeText(requireContext(), "Item out of stock", Toast.LENGTH_SHORT).show();
+            Snackbar.make(binding.getRoot(), "Item out of stock", Snackbar.LENGTH_SHORT)
+                .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.danger))
+                .setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
+                .show();
         }
     }
 
@@ -351,7 +409,10 @@ public class PosFragment extends Fragment {
             return;
         }
         if (!item.isService() && newQty > item.getMaxQty()) {
-            Toast.makeText(requireContext(), "Not enough stock", Toast.LENGTH_SHORT).show();
+            Snackbar.make(binding.getRoot(), "Not enough stock", Snackbar.LENGTH_SHORT)
+                .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.warning))
+                .setTextColor(ContextCompat.getColor(requireContext(), R.color.gray_900))
+                .show();
             return;
         }
         item.setQuantity(newQty);
@@ -369,6 +430,9 @@ public class PosFragment extends Fragment {
     private void clearCart() {
         cart.clear();
         cartAdapter.notifyDataSetChanged();
+        binding.etPayment.setText("");
+        binding.changeLayout.setVisibility(View.GONE);
+        binding.remainingLayout.setVisibility(View.GONE);
         updateTotal();
     }
 
@@ -394,50 +458,62 @@ public class PosFragment extends Fragment {
         // Show/hide FAB based on cart
         if (cart.isEmpty()) {
             binding.cartFab.setVisibility(View.GONE);
+            binding.emptyCartLayout.setVisibility(View.VISIBLE);
+            binding.cartRecyclerView.setVisibility(View.GONE);
+            binding.cartFooter.setVisibility(View.GONE);
         } else {
             binding.cartFab.setVisibility(View.VISIBLE);
-            binding.tvCartFabTotal.setText("TSH " + nf.format((long) total));
+            binding.cartFab.setText("TSH " + nf.format((long) total));
+            binding.emptyCartLayout.setVisibility(View.GONE);
+            binding.cartRecyclerView.setVisibility(View.VISIBLE);
+            binding.cartFooter.setVisibility(View.VISIBLE);
         }
         
         binding.btnCheckout.setEnabled(!cart.isEmpty());
     }
 
-    private void showCheckoutDialog() {
+    private double getTotal() {
+        double subtotal = 0;
+        for (CartItem item : cart) {
+            subtotal += item.getSubtotal();
+        }
+        double tax = subtotal * 0.10;
+        return subtotal + tax;
+    }
+
+    private void processCheckout() {
+        android.util.Log.d("PyPOS", "processCheckout called. Cart size: " + cart.size());
+        android.util.Log.d("PyPOS", "Cart items: " + cart.toString());
+        
         if (cart.isEmpty()) {
-            Toast.makeText(requireContext(), "Cart is empty", Toast.LENGTH_SHORT).show();
+            Snackbar.make(binding.getRoot(), "Cart is empty! Add items first.", Snackbar.LENGTH_LONG)
+                .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.warning))
+                .setTextColor(ContextCompat.getColor(requireContext(), R.color.gray_900))
+                .show();
             return;
         }
         
-        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_checkout, null);
-        TextInputEditText paymentInput = dialogView.findViewById(R.id.paymentInput);
-        
         double total = getTotal();
-        paymentInput.setText(String.valueOf((long) total));
+        android.util.Log.d("PyPOS", "Total: " + total);
         
-        new MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Checkout")
-            .setView(dialogView)
-            .setPositiveButton("Complete Sale", (dialog, which) -> {
-                String paymentStr = paymentInput.getText() != null ? paymentInput.getText().toString() : "0";
-                double payment = Double.parseDouble(paymentStr);
-                
-                if (payment < total) {
-                    Toast.makeText(requireContext(), "Insufficient payment", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                
-                processSale();
-            })
-            .setNegativeButton("Cancel", null)
-            .show();
-    }
-
-    private double getTotal() {
-        double total = 0;
-        for (CartItem item : cart) {
-            total += item.getSubtotal();
+        String paymentStr = binding.etPayment.getText() != null ? binding.etPayment.getText().toString() : "0";
+        double payment = paymentStr.isEmpty() ? 0 : Double.parseDouble(paymentStr);
+        
+        android.util.Log.d("PyPOS", "Payment: " + payment);
+        
+        if (payment < total) {
+            Snackbar.make(binding.getRoot(), "Insufficient payment. Total: TSH " + (long) total, Snackbar.LENGTH_LONG)
+                .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.danger))
+                .setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
+                .show();
+            return;
         }
-        return total;
+        
+        Snackbar.make(binding.getRoot(), "Processing sale...", Snackbar.LENGTH_SHORT)
+            .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.info))
+            .setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
+            .show();
+        processSale();
     }
 
     private void processSale() {
@@ -455,7 +531,10 @@ public class PosFragment extends Fragment {
         api.createSale(saleItems, "cash", 0.0, null, new ApiService.Callback<com.dtcteam.pypos.model.Sale>() {
             @Override
             public void onSuccess(com.dtcteam.pypos.model.Sale result) {
-                Toast.makeText(requireContext(), "Sale completed!", Toast.LENGTH_SHORT).show();
+                Snackbar.make(binding.getRoot(), "Sale completed!", Snackbar.LENGTH_SHORT)
+                    .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.success))
+                    .setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
+                    .show();
                 clearCart();
                 loadData();
                 binding.loadingIndicator.setVisibility(View.GONE);
@@ -463,7 +542,10 @@ public class PosFragment extends Fragment {
 
             @Override
             public void onError(String error) {
-                Toast.makeText(requireContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+                Snackbar.make(binding.getRoot(), "Error: " + error, Snackbar.LENGTH_LONG)
+                    .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.danger))
+                    .setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
+                    .show();
                 binding.loadingIndicator.setVisibility(View.GONE);
             }
         });

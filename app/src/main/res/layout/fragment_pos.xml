@@ -112,48 +112,26 @@
         app:layout_constraintTop_toBottomOf="@id/categoryScroll" />
 
     <!-- Cart FAB (shown when cart has items) -->
-    <com.google.android.material.card.MaterialCardView
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/cartFab"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="56dp"
         android:layout_margin="16dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
         android:visibility="gone"
-        app:cardBackgroundColor="@color/primary"
-        app:cardCornerRadius="28dp"
-        app:cardElevation="8dp"
+        android:text="TSH 0"
+        android:textColor="@color/white"
+        android:textAllCaps="false"
+        app:backgroundTint="@color/primary"
+        app:icon="@drawable/ic_cart"
+        app:iconTint="@color/white"
+        app:iconGravity="textStart"
+        app:cornerRadius="6dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="12dp">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:contentDescription="Cart"
-                android:src="@drawable/ic_cart"
-                app:tint="@color/white" />
-
-            <TextView
-                android:id="@+id/tvCartFabTotal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="TSH 0"
-                android:textColor="@color/white"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
-
-    </com.google.android.material.card.MaterialCardView>
-
-    <!-- Full Cart Overlay (when FAB is clicked) -->
+    <!-- Full Cart Overlay -->
     <FrameLayout
         android:id="@+id/cartOverlay"
         android:layout_width="match_parent"
@@ -172,6 +150,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_margin="16dp"
+            android:clickable="true"
+            android:focusable="true"
             app:cardBackgroundColor="@color/surface"
             app:cardCornerRadius="16dp"
             app:cardElevation="8dp"
@@ -186,63 +166,121 @@
                 <!-- Cart Header -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="48dp"
                     android:background="@color/primary"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:paddingHorizontal="16dp"
-                    android:paddingVertical="12dp">
+                    android:paddingHorizontal="16dp">
 
                     <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
                         android:contentDescription="Cart"
                         android:src="@drawable/ic_cart"
                         android:tint="@color/white" />
 
                     <TextView
+                        android:id="@+id/tvCartHeader"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
+                        android:layout_marginStart="8dp"
                         android:layout_weight="1"
-                        android:text="Cart"
+                        android:text="Cart (0)"
                         android:textColor="@color/white"
-                        android:textSize="18sp"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
 
-                    <com.google.android.material.button.MaterialButton
+                    <ImageButton
                         android:id="@+id/btnCloseCart"
-                        style="@style/Widget.Material3.Button.TextButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="X"
-                        android:textAllCaps="false"
-                        android:textColor="@color/white"
-                        android:textSize="18sp" />
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Close"
+                        android:src="@drawable/ic_close"
+                        android:tint="@color/white" />
 
                 </LinearLayout>
 
-                <!-- Cart Items -->
+                <!-- Empty Cart State -->
+                <LinearLayout
+                    android:id="@+id/emptyCartLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="32dp">
+
+                    <ImageView
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:alpha="0.5"
+                        android:src="@drawable/ic_cart"
+                        android:tint="@color/text_muted" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="Cart is empty"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Click items to add"
+                        android:textColor="@color/text_muted"
+                        android:textSize="14sp" />
+
+                </LinearLayout>
+
+                <!-- Cart Items List -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/cartRecyclerView"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1"
                     android:paddingHorizontal="12dp"
-                    android:paddingVertical="8dp" />
+                    android:paddingVertical="8dp"
+                    android:visibility="gone" />
 
                 <!-- Cart Footer -->
                 <LinearLayout
+                    android:id="@+id/cartFooter"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/gray_100"
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <!-- Subtotal, Tax, Discount -->
+                    <!-- Summary -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Total Items:"
+                            android:textColor="@color/text_secondary" />
+
+                        <TextView
+                            android:id="@+id/tvTotalItems"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textColor="@color/text_primary" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
                         android:orientation="horizontal">
 
                         <TextView
@@ -337,6 +375,73 @@
 
                     </LinearLayout>
 
+                    <!-- Payment Input -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/paymentInputLayout"
+                        style="@style/Widget.PyPOS.TextInputLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="Amount from Customer (TSH)">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etPayment"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Change Display -->
+                    <LinearLayout
+                        android:id="@+id/changeLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_success_rounded"
+                        android:orientation="horizontal"
+                        android:padding="10dp"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Change:"
+                            android:textColor="@color/success" />
+
+                        <TextView
+                            android:id="@+id/tvChange"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="TSH 0"
+                            android:textColor="@color/success"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                    <!-- Remaining Display -->
+                    <LinearLayout
+                        android:id="@+id/remainingLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_warning_rounded"
+                        android:orientation="horizontal"
+                        android:padding="10dp"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:id="@+id/tvRemaining"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Remaining: TSH 0"
+                            android:textColor="@color/warning"
+                            android:textSize="12sp" />
+
+                    </LinearLayout>
+
                     <!-- Buttons -->
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -359,10 +464,11 @@
                             android:layout_width="0dp"
                             android:layout_height="48dp"
                             android:layout_weight="1"
-                            android:text="Checkout"
+                            android:text="Complete Sale"
+                            android:textColor="@color/white"
                             android:textAllCaps="false"
                             app:backgroundTint="@color/primary"
-                            app:cornerRadius="4dp" />
+                            app:cornerRadius="6dp" />
 
                     </LinearLayout>
 

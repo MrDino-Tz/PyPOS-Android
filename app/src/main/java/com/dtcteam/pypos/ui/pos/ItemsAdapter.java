@@ -57,9 +57,14 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder> 
             tvName.setText(item.getName());
             Locale usLocale = new Locale("en", "US");
             tvPrice.setText("TSH " + String.format(usLocale, "%,d", (long) item.getUnitPrice()));
-            tvStock.setText("Stock: " + item.getQuantity());
             
-            if (item.getQuantity() == 0) {
+            if (item.isService()) {
+                tvStock.setText("∞");
+            } else {
+                tvStock.setText("Stock: " + item.getQuantity());
+            }
+            
+            if (item.getQuantity() == 0 && !item.isService()) {
                 itemView.setAlpha(0.5f);
             } else {
                 itemView.setAlpha(1.0f);
