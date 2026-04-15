@@ -755,6 +755,7 @@ public class ApiService {
         });
     }
 
+    // Update existing item
     public void updateItem(Item item, Callback<Item> callback) {
         String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/items?id=eq." + item.getId();
         
@@ -768,6 +769,7 @@ public class ApiService {
         body.addProperty("min_stock_level", item.getMinStockLevel());
         body.addProperty("is_active", item.isActive());
         body.addProperty("is_service", item.isService());
+        if (item.getImageUrl() != null) body.addProperty("image_url", item.getImageUrl());
 
         Request request = new Request.Builder()
             .url(url)
@@ -806,7 +808,7 @@ public class ApiService {
         });
     }
 
-    public void deleteItem(int itemId, Callback<Void> callback) {
+public void deleteItem(int itemId, Callback<Void> callback) {
         String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/items?id=eq." + itemId;
         
         Request request = new Request.Builder()
@@ -822,7 +824,38 @@ public class ApiService {
                 if (response.isSuccessful()) {
                     mainHandler.post(() -> callback.onSuccess(null));
                 } else {
-                    mainHandler.post(() -> callback.onError("Failed to delete item"));
+                    mainHandler.post(() -> callback.onError("Failed to delete item: " + response.code()));
+                }
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
+    public void uploadImage(byte[] imageBytes, String fileName, Callback<String> callback) {
+        String url = SupabaseClient.getSUPABASE_URL() + "/storage/v1/object/item-images/" + fileName;
+        
+        RequestBody body = RequestBody.create(imageBytes, okhttp3.MediaType.parse("image/*"));
+        
+        Request request = new Request.Builder()
+            .url(url)
+            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+            .addHeader("Content-Type", "image/*")
+            .post(body)
+            .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String publicUrl = SupabaseClient.getSUPABASE_URL() + "/storage/v1/object/public/item-images/" + fileName;
+                    mainHandler.post(() -> callback.onSuccess(publicUrl));
+                } else {
+                    mainHandler.post(() -> callback.onError("Failed to upload image: " + response.code()));
                 }
             }
 

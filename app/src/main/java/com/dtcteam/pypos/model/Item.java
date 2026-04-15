@@ -12,6 +12,7 @@ public class Item {
     private int minStockLevel;
     private boolean isActive;
     private boolean isService;
+    private String imageUrl;
     private String createdAt;
 
     public int getId() { return id; }
@@ -36,6 +37,8 @@ public class Item {
     public void setActive(boolean active) { isActive = active; }
     public boolean isService() { return isService; }
     public void setService(boolean service) { isService = service; }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 }
