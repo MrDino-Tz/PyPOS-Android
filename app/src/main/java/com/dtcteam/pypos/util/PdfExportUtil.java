@@ -1,8 +1,12 @@
 package com.dtcteam.pypos.util;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Environment;
 import android.widget.Toast;
+
+import androidx.core.content.FileProvider;
 
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -231,9 +235,24 @@ public class PdfExportUtil {
             android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
             intent.setData(android.net.Uri.fromFile(file));
             context.sendBroadcast(intent);
+            
+            openPdf(context, file);
+            
             Toast.makeText(context, "Saved to Downloads/PyPOS/" + fileName, Toast.LENGTH_LONG).show();
         } catch (Exception e) {
             Toast.makeText(context, "Saved to " + file.getAbsolutePath(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private static void openPdf(Context context, File file) {
+        try {
+            Uri uri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", file);
+            Intent viewIntent = new Intent(Intent.ACTION_VIEW);
+            viewIntent.setDataAndType(uri, "application/pdf");
+            viewIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            context.startActivity(viewIntent);
+        } catch (Exception e) {
+            // Silently fail if no PDF viewer available
         }
     }
 }
