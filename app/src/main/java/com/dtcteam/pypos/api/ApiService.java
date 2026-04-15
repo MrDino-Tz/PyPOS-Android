@@ -88,14 +88,20 @@ public class ApiService {
 
                         String userId = userJson.has("id") ? userJson.get("id").getAsString() : "";
                         String userEmail = userJson.has("email") ? userJson.get("email").getAsString() : "";
-
-                        supabase.setSession(accessToken, userId, userEmail);
+                        
+                        String userRole = "staff";
+                        JsonObject userMeta = userJson.has("user_metadata") ? userJson.getAsJsonObject("user_metadata") : null;
+                        if (userMeta != null && userMeta.has("role")) {
+                            userRole = userMeta.get("role").getAsString();
+                        }
+                        
+                        supabase.setSession(accessToken, userId, userEmail, userRole);
 
                         User user = new User();
                         user.setId(userId);
                         user.setEmail(userEmail);
                         user.setUsername(userEmail.split("@")[0]);
-                        user.setRole("admin");
+                        user.setRole(userRole);
                         user.setFullName(userEmail);
 
                         mainHandler.post(() -> callback.onSuccess(user));
@@ -712,7 +718,7 @@ public class ApiService {
         body.addProperty("sku", item.getSku());
         if (item.getCategoryId() != null) body.addProperty("category_id", item.getCategoryId());
         body.addProperty("unit_price", item.getUnitPrice());
-        body.addProperty("cost", item.getCost());
+        body.addProperty("cost_price", item.getCost());
         body.addProperty("quantity", item.getQuantity());
         body.addProperty("min_stock_level", item.getMinStockLevel());
         body.addProperty("is_active", item.isActive());
@@ -757,7 +763,7 @@ public class ApiService {
         body.addProperty("sku", item.getSku());
         if (item.getCategoryId() != null) body.addProperty("category_id", item.getCategoryId());
         body.addProperty("unit_price", item.getUnitPrice());
-        body.addProperty("cost", item.getCost());
+        body.addProperty("cost_price", item.getCost());
         body.addProperty("quantity", item.getQuantity());
         body.addProperty("min_stock_level", item.getMinStockLevel());
         body.addProperty("is_active", item.isActive());
@@ -776,6 +782,7 @@ public class ApiService {
             public void onResponse(Call call, Response response) throws IOException {
                 try {
                     String responseBody = response.body().string();
+                    android.util.Log.d("PyPOS", "Update item response: " + response.code() + " - " + responseBody);
                     if (response.isSuccessful()) {
                         JsonArray array = gson.fromJson(responseBody, JsonArray.class);
                         if (array.size() > 0) {
@@ -784,9 +791,10 @@ public class ApiService {
                             mainHandler.post(() -> callback.onError("Item not found"));
                         }
                     } else {
-                        mainHandler.post(() -> callback.onError("Failed to update item"));
+                        mainHandler.post(() -> callback.onError("Failed to update item: " + response.code()));
                     }
                 } catch (Exception e) {
+                    android.util.Log.e("PyPOS", "Error updating item", e);
                     mainHandler.post(() -> callback.onError(e.getMessage()));
                 }
             }
@@ -988,7 +996,7 @@ public class ApiService {
         item.setName(json.has("name") && !json.get("name").isJsonNull() ? json.get("name").getAsString() : "");
         item.setSku(json.has("sku") && !json.get("sku").isJsonNull() ? json.get("sku").getAsString() : "");
         item.setUnitPrice(json.has("unit_price") && !json.get("unit_price").isJsonNull() ? json.get("unit_price").getAsDouble() : 0.0);
-        item.setCost(json.has("cost") && !json.get("cost").isJsonNull() ? json.get("cost").getAsDouble() : 0.0);
+        item.setCost(json.has("cost_price") && !json.get("cost_price").isJsonNull() ? json.get("cost_price").getAsDouble() : 0.0);
         item.setQuantity(json.has("quantity") && !json.get("quantity").isJsonNull() ? json.get("quantity").getAsInt() : 0);
         item.setMinStockLevel(json.has("min_stock_level") && !json.get("min_stock_level").isJsonNull() ? json.get("min_stock_level").getAsInt() : 0);
         item.setActive(json.has("is_active") && !json.get("is_active").isJsonNull() ? json.get("is_active").getAsBoolean() : true);

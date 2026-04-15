@@ -280,20 +280,19 @@ public class PosFragment extends Fragment {
         card.setOrientation(LinearLayout.VERTICAL);
         card.setGravity(Gravity.CENTER);
         
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-            (int) (80 * getResources().getDisplayMetrics().density),
-            (int) (70 * getResources().getDisplayMetrics().density)
-        );
+        int cardWidth = (int) (90 * getResources().getDisplayMetrics().density);
+        int cardHeight = (int) (80 * getResources().getDisplayMetrics().density);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(cardWidth, cardHeight);
         params.setMargins(0, 0, (int) (8 * getResources().getDisplayMetrics().density), 0);
         card.setLayoutParams(params);
         
         card.setBackgroundResource(R.drawable.bg_service_card);
-        card.setPadding(8, 8, 8, 8);
+        card.setPadding(10, 10, 10, 10);
         card.setOnClickListener(v -> addToCart(service));
         
         TextView name = new TextView(requireContext());
-        name.setText(service.getName().length() > 15 ? service.getName().substring(0, 12) + "..." : service.getName());
-        name.setTextSize(9);
+        name.setText(service.getName().length() > 12 ? service.getName().substring(0, 10) + "..." : service.getName());
+        name.setTextSize(10);
         name.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
         name.setGravity(Gravity.CENTER);
         name.setMaxLines(2);
@@ -308,7 +307,7 @@ public class PosFragment extends Fragment {
         card.addView(name);
         card.addView(price);
         
-        return card;
+return card;
     }
 
     private View createMoreServicesCard() {
@@ -316,26 +315,25 @@ public class PosFragment extends Fragment {
         card.setOrientation(LinearLayout.VERTICAL);
         card.setGravity(Gravity.CENTER);
         
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-            (int) (60 * getResources().getDisplayMetrics().density),
-            (int) (70 * getResources().getDisplayMetrics().density)
-        );
+        int cardWidth = (int) (90 * getResources().getDisplayMetrics().density);
+        int cardHeight = (int) (80 * getResources().getDisplayMetrics().density);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(cardWidth, cardHeight);
         params.setMargins(0, 0, (int) (8 * getResources().getDisplayMetrics().density), 0);
         card.setLayoutParams(params);
         
         card.setBackgroundResource(R.drawable.bg_more_services);
-        card.setPadding(8, 8, 8, 8);
+        card.setPadding(10, 10, 10, 10);
         card.setOnClickListener(v -> showMoreServicesDialog());
         
         TextView plus = new TextView(requireContext());
         plus.setText("+");
-        plus.setTextSize(20);
+        plus.setTextSize(24);
         plus.setTextColor(ContextCompat.getColor(requireContext(), R.color.gray_400));
         plus.setGravity(Gravity.CENTER);
         
         TextView more = new TextView(requireContext());
         more.setText("More (" + otherServices.size() + ")");
-        more.setTextSize(9);
+        more.setTextSize(10);
         more.setTextColor(ContextCompat.getColor(requireContext(), R.color.gray_500));
         more.setGravity(Gravity.CENTER);
         

@@ -2,6 +2,7 @@ package com.dtcteam.pypos;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
@@ -17,6 +18,7 @@ import com.dtcteam.pypos.ui.categories.CategoriesFragment;
 import com.dtcteam.pypos.ui.dashboard.DashboardFragment;
 import com.dtcteam.pypos.ui.items.ItemsActivity;
 import com.dtcteam.pypos.ui.categories.CategoriesActivity;
+import com.dtcteam.pypos.ui.sales.SalesActivity;
 import com.dtcteam.pypos.ui.stock.StockActivity;
 import com.dtcteam.pypos.ui.reports.ReportsActivity;
 import com.dtcteam.pypos.ui.users.UsersActivity;
@@ -24,7 +26,7 @@ import com.dtcteam.pypos.ui.pos.PosFragment;
 import com.dtcteam.pypos.ui.settings.ServicesFragment;
 import com.dtcteam.pypos.ui.settings.SettingsFragment;
 import com.dtcteam.pypos.ui.login.LoginActivity;
-import com.dtcteam.pypos.ui.sales.SalesActivity;
+import com.dtcteam.pypos.ui.notifications.NotificationsActivity;
 import com.google.android.material.navigation.NavigationView;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -47,7 +49,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         api.getCurrentUser(new ApiService.Callback<User>() {
             @Override
             public void onSuccess(User result) {
-                updateUserEmail(result.getEmail());
+                updateUserEmail(result.getEmail(), result.getRole());
+                setupDrawerMenu(result.isAdmin());
             }
 
             @Override
@@ -57,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
     }
 
-    private void updateUserEmail(String email) {
+    private void updateUserEmail(String email, String role) {
         NavigationView navView = findViewById(R.id.navigationView);
         if (navView != null) {
             View headerView = navView.getHeaderView(0);
@@ -66,8 +69,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (tvEmail != null) {
                     tvEmail.setText(email);
                 }
+                TextView tvRole = headerView.findViewById(R.id.tvUserRole);
+                if (tvRole != null) {
+                    tvRole.setText(role != null ? role.toUpperCase() : "STAFF");
+                }
             }
         }
+    }
+    
+    private void setupDrawerMenu(boolean isAdmin) {
+        NavigationView navView = findViewById(R.id.navigationView);
+        if (navView == null) return;
+        
+        Menu menu = navView.getMenu();
+        
+        // Hide admin-only items for non-admin users
+        menu.findItem(R.id.nav_items).setVisible(isAdmin);
+        menu.findItem(R.id.nav_categories).setVisible(isAdmin);
+        menu.findItem(R.id.nav_stock).setVisible(isAdmin);
+        menu.findItem(R.id.nav_reports).setVisible(isAdmin);
+        menu.findItem(R.id.nav_users).setVisible(isAdmin);
     }
 
     private void setupDrawer() {
@@ -76,7 +97,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
         binding.btnNotifications.setOnClickListener(v -> {
-            // TODO: Show notifications
+            Intent intent = new Intent(this, NotificationsActivity.class);
+            startActivity(intent);
         });
 
         binding.navigationView.setNavigationItemSelectedListener(this);
@@ -111,6 +133,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivity(intent);
         } else if (itemId == R.id.nav_reports) {
             Intent intent = new Intent(this, ReportsActivity.class);
+            startActivity(intent);
+        } else if (itemId == R.id.nav_analytics) {
+            Intent intent = new Intent(this, com.dtcteam.pypos.ui.analytics.AnalyticsActivity.class);
             startActivity(intent);
         } else if (itemId == R.id.nav_users) {
             Intent intent = new Intent(this, UsersActivity.class);
