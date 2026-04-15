@@ -1,14 +1,26 @@
 package com.dtcteam.pypos.ui.items;
 
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Base64;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.Toast;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -25,6 +37,8 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +53,45 @@ public class ItemsActivity extends AppCompatActivity {
     private SkeletonAdapter skeletonAdapter;
     private ArrayList<Category> categories = new ArrayList<>();
     private Item editingItem;
+    private byte[] selectedImageBytes;
+    private String selectedImageUrl;
+    private DialogItemFormBinding currentDialogBinding;
+
+    private final ActivityResultLauncher<Intent> imagePickerLauncher = registerForActivityResult(
+        new ActivityResultContracts.StartActivityForResult(),
+        result -> {
+            if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                Uri imageUri = result.getData().getData();
+                if (imageUri != null && currentDialogBinding != null) {
+                    try {
+                        InputStream inputStream = getContentResolver().openInputStream(imageUri);
+                        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                        byte[] data = new byte[4096];
+                        int bytesRead;
+                        while ((bytesRead = inputStream.read(data)) != -1) {
+                            buffer.write(data, 0, bytesRead);
+                        }
+                        selectedImageBytes = buffer.toByteArray();
+                        currentDialogBinding.ivItemImage.setImageURI(imageUri);
+                        currentDialogBinding.ivItemImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        }
+    );
+
+    private final ActivityResultLauncher<String> permissionLauncher = registerForActivityResult(
+        new ActivityResultContracts.RequestPermission(),
+        isGranted -> {
+            if (isGranted) {
+                openImagePicker();
+            } else {
+                Toast.makeText(this, "Permission required to select images", Toast.LENGTH_SHORT).show();
+            }
+        }
+    );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -221,9 +274,13 @@ public class ItemsActivity extends AppCompatActivity {
 
     private void showItemDialog(Item item) {
         editingItem = item;
+        selectedImageBytes = null;
+        selectedImageUrl = item != null ? item.getImageUrl() : null;
+        
         BottomSheetDialog dialog = new BottomSheetDialog(this);
         DialogItemFormBinding dialogBinding = DialogItemFormBinding.inflate(getLayoutInflater());
         dialog.setContentView(dialogBinding.getRoot());
+        currentDialogBinding = dialogBinding;
 
         TextInputEditText etName = dialogBinding.etName;
         TextInputEditText etSku = dialogBinding.etSku;
@@ -266,6 +323,30 @@ public class ItemsActivity extends AppCompatActivity {
             tilQuantity.setVisibility(isChecked ? View.GONE : View.VISIBLE);
             tilMinStock.setVisibility(isChecked ? View.GONE : View.VISIBLE);
         });
+
+        // Image selection
+        dialogBinding.btnSelectImage.setOnClickListener(v -> checkPermissionAndPickImage());
+        
+        // Load existing image if editing
+        if (item != null && item.getImageUrl() != null && !item.getImageUrl().isEmpty()) {
+            selectedImageUrl = item.getImageUrl();
+            new Thread(() -> {
+                try {
+                    okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+                    okhttp3.Request request = new okhttp3.Request.Builder().url(item.getImageUrl()).build();
+                    okhttp3.Response response = client.newCall(request).execute();
+                    if (response.isSuccessful()) {
+                        byte[] imageData = response.body().bytes();
+                        runOnUiThread(() -> {
+                            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeByteArray(imageData, 0, imageData.length);
+                            dialogBinding.ivItemImage.setImageBitmap(bitmap);
+                        });
+                    }
+                } catch (Exception e) {
+                    // Ignore
+                }
+            }).start();
+        }
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
         btnSave.setOnClickListener(v -> {
@@ -315,38 +396,65 @@ public class ItemsActivity extends AppCompatActivity {
             newItem.setCategoryId(categoryId);
             newItem.setActive(true);
             newItem.setService(cbIsService.isChecked());
+            newItem.setImageUrl(selectedImageUrl);
 
-            if (item != null) {
-                newItem.setId(item.getId());
-                api.updateItem(newItem, new ApiService.Callback<Item>() {
+            if (selectedImageBytes != null) {
+                String fileName = "item_" + System.currentTimeMillis() + ".jpg";
+                btnSave.setEnabled(false);
+                btnSave.setText("Uploading...");
+                
+                api.uploadImage(selectedImageBytes, fileName, new ApiService.Callback<String>() {
                     @Override
-                    public void onSuccess(Item result) {
-                        dialog.dismiss();
-                        loadItems();
+                    public void onSuccess(String imageUrl) {
+                        newItem.setImageUrl(imageUrl);
+                        saveItem(newItem, item, dialog);
                     }
 
                     @Override
                     public void onError(String error) {
-                        Toast.makeText(ItemsActivity.this, error, Toast.LENGTH_SHORT).show();
+                        runOnUiThread(() -> {
+                            btnSave.setEnabled(true);
+                            btnSave.setText("Save");
+                            Toast.makeText(ItemsActivity.this, "Image upload failed, saving without image", Toast.LENGTH_SHORT).show();
+                        });
+                        saveItem(newItem, item, dialog);
                     }
                 });
             } else {
-                api.createItem(newItem, new ApiService.Callback<Item>() {
-                    @Override
-                    public void onSuccess(Item result) {
-                        dialog.dismiss();
-                        loadItems();
-                    }
-
-                    @Override
-                    public void onError(String error) {
-                        Toast.makeText(ItemsActivity.this, error, Toast.LENGTH_SHORT).show();
-                    }
-                });
+                saveItem(newItem, item, dialog);
             }
         });
+    }
 
-        dialog.show();
+    private void saveItem(Item newItem, Item originalItem, BottomSheetDialog dialog) {
+        if (originalItem != null) {
+            newItem.setId(originalItem.getId());
+            api.updateItem(newItem, new ApiService.Callback<Item>() {
+                @Override
+                public void onSuccess(Item result) {
+                    dialog.dismiss();
+                    loadItems();
+                }
+
+                @Override
+                public void onError(String error) {
+                    Toast.makeText(ItemsActivity.this, error, Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            api.createItem(newItem, new ApiService.Callback<Item>() {
+                @Override
+                public void onSuccess(Item result) {
+                    dialog.dismiss();
+                    loadItems();
+                }
+
+                @Override
+                public void onError(String error) {
+                    Toast.makeText(ItemsActivity.this, error, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
     private void deleteItem(Item item) {
@@ -517,5 +625,26 @@ public class ItemsActivity extends AppCompatActivity {
             })
             .setNegativeButton("Cancel", null)
             .show();
+    }
+
+    private void checkPermissionAndPickImage() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED) {
+                openImagePicker();
+            } else {
+                permissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES);
+            }
+        } else {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                openImagePicker();
+            } else {
+                permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE);
+            }
+        }
+    }
+
+    private void openImagePicker() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        imagePickerLauncher.launch(intent);
     }
 }

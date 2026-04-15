@@ -34,6 +34,12 @@
     <!-- Border -->
     <color name="border">#E5E5E5</color>
     
+    <!-- Switch Colors -->
+    <color name="switch_thumb_color">#FFFFFF</color>
+    <color name="switch_track_color">#E5E5E5</color>
+    <color name="switch_thumb_checked">#FFFFFF</color>
+    <color name="switch_track_checked">#E66239</color>
+    
     <!-- Standard -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>

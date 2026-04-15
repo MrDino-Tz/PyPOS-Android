@@ -4,32 +4,23 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/gray_100"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/surface"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@drawable/bg_round_gray"
-            android:contentDescription="Back"
-            android:padding="8dp"
-            android:src="@drawable/ic_arrow_left"
-            app:tint="@color/text_primary" />
+        android:orientation="horizontal"
+        android:padding="12dp">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_weight="1"
             android:text="Settings"
             android:textColor="@color/text_primary"
-            android:textSize="24sp"
+            android:textSize="20sp"
             android:textStyle="bold" />
 
     </LinearLayout>
@@ -38,9 +29,17 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
+        android:layout_marginStart="16dp"
         android:text="Manage your account"
         android:textColor="@color/text_muted"
         android:textSize="14sp" />
+            android:layout_weight="1"
+            android:text="Settings"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardAccount"
@@ -134,7 +133,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
-                app:useMaterialThemeColors="true" />
+                app:trackTint="@color/switch_track_color"
+                app:thumbTint="@color/switch_thumb_color"
+                app:useMaterialThemeColors="false" />
 
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

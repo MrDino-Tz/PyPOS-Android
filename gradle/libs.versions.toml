@@ -15,6 +15,7 @@ swiperefreshlayout = "1.1.0"
 mpchart = "3.1.0"
 itext = "7.2.5"
 poi = "5.2.5"
+circleimageview = "3.1.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -32,6 +33,7 @@ swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefre
 mpchart = { group = "com.github.PhilJay", name = "MPAndroidChart", version.ref = "mpchart" }
 itext = { group = "com.itextpdf", name = "itext7-core", version.ref = "itext" }
 poi = { group = "org.apache.poi", name = "poi", version.ref = "poi" }
+circleimageview = { group = "de.hdodenhof", name = "circleimageview", version.ref = "circleimageview" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

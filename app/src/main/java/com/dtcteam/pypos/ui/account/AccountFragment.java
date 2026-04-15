@@ -6,17 +6,21 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.fragment.app.Fragment;
 import com.dtcteam.pypos.R;
 import com.dtcteam.pypos.api.ApiService;
+import com.dtcteam.pypos.api.SupabaseClient;
 import com.dtcteam.pypos.databinding.FragmentAccountBinding;
 import com.dtcteam.pypos.model.User;
 import com.dtcteam.pypos.ui.login.LoginActivity;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class AccountFragment extends Fragment {
 
     private FragmentAccountBinding binding;
     private final ApiService api = ApiService.getInstance();
+    private final SupabaseClient supabase = SupabaseClient.getInstance();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -28,27 +32,45 @@ public class AccountFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         
-        binding.btnBack.setOnClickListener(v -> {
-            requireActivity().getSupportFragmentManager().popBackStack();
+        binding.btnLogout.setOnClickListener(v -> showLogoutConfirmation());
+        
+        binding.btnEditProfile.setOnClickListener(v -> {
+            Toast.makeText(requireContext(), "Edit profile coming soon", Toast.LENGTH_SHORT).show();
         });
-
-        binding.btnLogout.setOnClickListener(v -> logout());
+        
+        binding.btnSettings.setOnClickListener(v -> {
+            Toast.makeText(requireContext(), "Settings coming soon", Toast.LENGTH_SHORT).show();
+        });
+        
+        binding.fabChangePhoto.setOnClickListener(v -> {
+            Toast.makeText(requireContext(), "Change photo coming soon", Toast.LENGTH_SHORT).show();
+        });
         
         loadUserInfo();
     }
 
     private void loadUserInfo() {
-        api.getCurrentUser(new ApiService.Callback<User>() {
-            @Override
-            public void onSuccess(User result) {
-                if (result != null) {
-                    binding.tvUserEmail.setText(result.getEmail());
-                }
-            }
+        String userEmail = supabase.getUserEmail();
+        String userRole = supabase.getUserRole();
+        
+        if (userEmail != null) {
+            binding.tvUserEmail.setText(userEmail);
+            String username = userEmail.split("@")[0];
+            binding.tvUserName.setText(username.substring(0, 1).toUpperCase() + username.substring(1));
+        }
+        
+        if (userRole != null) {
+            binding.tvUserEmail.setText(userRole.equals("admin") ? "ADMIN" : "Staff");
+        }
+    }
 
-            @Override
-            public void onError(String error) {}
-        });
+    private void showLogoutConfirmation() {
+        new MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Logout")
+            .setMessage("Are you sure you want to logout?")
+            .setPositiveButton("Logout", (dialog, which) -> logout())
+            .setNegativeButton("Cancel", null)
+            .show();
     }
 
     private void logout() {

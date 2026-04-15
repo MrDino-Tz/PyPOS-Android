@@ -123,4 +123,10 @@
         <item name="android:textSize">11sp</item>
         <item name="android:fontFamily">@font/poppins</item>
     </style>
+
+    <!-- Rounded Corner Style for ImageView -->
+    <style name="RoundedCorner" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
 </resources>

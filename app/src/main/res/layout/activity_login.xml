@@ -30,12 +30,13 @@
                 android:padding="24dp">
 
                 <ImageView
+                    android:id="@+id/ivLogo"
                     android:layout_width="80dp"
                     android:layout_height="80dp"
                     android:layout_gravity="center"
-                    android:layout_marginBottom="16dp"
-                    android:src="@drawable/ic_launcher_foreground"
-                    android:background="@drawable/ic_launcher_background"
+                    android:layout_marginBottom="8dp"
+                    android:src="@drawable/logo1"
+                    android:scaleType="centerCrop"
                     android:contentDescription="Logo" />
 
                 <TextView
@@ -51,11 +52,11 @@
                     android:id="@+id/titleText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="22dp"
+                    android:layout_marginTop="16dp"
                     android:layout_gravity="center"
                     android:text="Welcome Back"
                     android:textColor="@color/text_primary"
-                    android:textSize="20sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <TextView

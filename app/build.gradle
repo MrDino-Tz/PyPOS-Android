@@ -44,6 +44,7 @@ dependencies {
     implementation libs.mpchart
     implementation libs.itext
     implementation libs.poi
+    implementation libs.circleimageview
     
     implementation libs.okhttp
     implementation libs.gson

@@ -51,6 +51,9 @@ public class LoginActivity extends AppCompatActivity {
         binding.btnPin.setOnClickListener(v -> showPinBottomSheet());
         
         binding.tvUseCredentials.setOnClickListener(v -> showCredentialsInput());
+        
+        // Load logo from drawable
+        binding.ivLogo.setImageResource(R.drawable.logo1);
     }
 
     private void showPinBottomSheet() {

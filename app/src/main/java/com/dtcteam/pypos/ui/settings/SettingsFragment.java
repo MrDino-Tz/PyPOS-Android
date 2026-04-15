@@ -44,10 +44,6 @@ public class SettingsFragment extends Fragment {
         
         binding.cardTheme.setOnClickListener(v -> showThemeSelectionDialog());
         
-        binding.btnBack.setOnClickListener(v -> {
-            requireActivity().getSupportFragmentManager().popBackStack();
-        });
-        
         binding.cardLogout.setOnClickListener(v -> logout());
         
         binding.switchPin.setOnCheckedChangeListener((buttonView, isChecked) -> {
