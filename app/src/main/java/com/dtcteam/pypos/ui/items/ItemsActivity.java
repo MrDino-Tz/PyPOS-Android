@@ -394,10 +394,21 @@ public class ItemsActivity extends AppCompatActivity {
         String fileName = "items_export_" + System.currentTimeMillis() + ".csv";
         
         try {
-            java.io.FileOutputStream fos = openFileOutput(fileName, MODE_PRIVATE);
-            fos.write(csv.toString().getBytes());
-            fos.close();
-            Toast.makeText(this, "Exported to " + fileName, Toast.LENGTH_LONG).show();
+            java.io.File downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS);
+            java.io.File pyposDir = new java.io.File(downloadsDir, "PyPOS");
+            if (!pyposDir.exists()) {
+                pyposDir.mkdirs();
+            }
+            java.io.File file = new java.io.File(pyposDir, fileName);
+            java.io.FileWriter writer = new java.io.FileWriter(file);
+            writer.write(csv.toString());
+            writer.close();
+            
+            android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+            intent.setData(android.net.Uri.fromFile(file));
+            sendBroadcast(intent);
+            
+            Toast.makeText(this, "Saved to Downloads/PyPOS/" + fileName, Toast.LENGTH_LONG).show();
         } catch (Exception e) {
             Toast.makeText(this, "Export failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }

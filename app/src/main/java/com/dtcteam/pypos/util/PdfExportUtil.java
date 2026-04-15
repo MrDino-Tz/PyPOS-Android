@@ -16,7 +16,6 @@ import com.itextpdf.layout.properties.UnitValue;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -73,8 +72,7 @@ public class PdfExportUtil {
 
             document.close();
             
-            openPdf(context, file);
-            Toast.makeText(context, "Exported to " + fileName, Toast.LENGTH_LONG).show();
+            saveToDownloads(context, file, fileName);
             
         } catch (Exception e) {
             Toast.makeText(context, "Export failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -123,8 +121,7 @@ public class PdfExportUtil {
 
             document.close();
             
-            openPdf(context, file);
-            Toast.makeText(context, "Exported to " + fileName, Toast.LENGTH_LONG).show();
+            saveToDownloads(context, file, fileName);
             
         } catch (Exception e) {
             Toast.makeText(context, "Export failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -191,8 +188,7 @@ public class PdfExportUtil {
 
             document.close();
             
-            openPdf(context, file);
-            Toast.makeText(context, "Exported to " + fileName, Toast.LENGTH_LONG).show();
+            saveToDownloads(context, file, fileName);
             
         } catch (Exception e) {
             Toast.makeText(context, "Export failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
