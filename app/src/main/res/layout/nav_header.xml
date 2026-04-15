@@ -32,4 +32,17 @@
         android:textSize="12sp"
         android:alpha="0.8" />
 
+    <TextView
+        android:id="@+id/tvUserRole"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="ADMIN"
+        android:textColor="@color/white"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        android:background="@drawable/bg_role_badge"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="2dp" />
+
 </LinearLayout>

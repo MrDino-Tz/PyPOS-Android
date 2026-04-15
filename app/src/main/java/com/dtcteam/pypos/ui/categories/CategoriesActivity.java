@@ -15,11 +15,14 @@ import com.dtcteam.pypos.databinding.ActivityCategoriesBinding;
 import com.dtcteam.pypos.databinding.DialogCategoryFormBinding;
 import com.dtcteam.pypos.model.Category;
 import com.dtcteam.pypos.ui.common.SkeletonAdapter;
+import com.dtcteam.pypos.util.PdfExportUtil;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class CategoriesActivity extends AppCompatActivity {
 
@@ -82,6 +85,10 @@ public class CategoriesActivity extends AppCompatActivity {
             exportCategories();
         });
         
+        binding.btnExportPdf.setOnClickListener(v -> {
+            exportCategoriesPdf();
+        });
+        
         binding.etSearch.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -141,6 +148,23 @@ public class CategoriesActivity extends AppCompatActivity {
         } catch (Exception e) {
             Toast.makeText(this, "Export failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void exportCategoriesPdf() {
+        if (categories.isEmpty()) {
+            Toast.makeText(this, "No categories to export", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        java.util.List<Map<String, Object>> exportData = new ArrayList<>();
+        for (Category category : categories) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("name", category.getName());
+            row.put("description", category.getDescription());
+            exportData.add(row);
+        }
+        
+        PdfExportUtil.exportCategories(this, exportData);
     }
 
     private void loadCategories() {

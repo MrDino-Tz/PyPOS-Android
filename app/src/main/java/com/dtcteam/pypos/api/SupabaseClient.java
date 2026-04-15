@@ -21,6 +21,7 @@ public class SupabaseClient {
     private String accessToken;
     private String userId;
     private String userEmail;
+    private String userRole;
     
     private SupabaseClient() {
         client = new OkHttpClient.Builder()
@@ -43,10 +44,18 @@ public class SupabaseClient {
         this.userEmail = email;
     }
     
+    public void setSession(String token, String id, String email, String role) {
+        this.accessToken = token;
+        this.userId = id;
+        this.userEmail = email;
+        this.userRole = role;
+    }
+    
     public void clearSession() {
         this.accessToken = null;
         this.userId = null;
         this.userEmail = null;
+        this.userRole = null;
     }
     
     public String getAccessToken() {
@@ -59,6 +68,14 @@ public class SupabaseClient {
     
     public String getUserEmail() {
         return userEmail;
+    }
+    
+    public String getUserRole() {
+        return userRole;
+    }
+    
+    public boolean isAdmin() {
+        return "admin".equals(userRole);
     }
     
     private Request.Builder buildRequest() {

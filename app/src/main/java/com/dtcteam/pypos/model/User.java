@@ -17,4 +17,8 @@ public class User {
     public void setUsername(String username) { this.username = username; }
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
+    
+    public boolean isAdmin() {
+        return "admin".equals(role);
+    }
 }

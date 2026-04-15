@@ -13,11 +13,14 @@ import com.dtcteam.pypos.databinding.ActivityReportsBinding;
 import com.dtcteam.pypos.model.Sale;
 import com.dtcteam.pypos.ui.sales.SalesAdapter;
 import com.dtcteam.pypos.ui.common.SkeletonAdapter;
+import com.dtcteam.pypos.util.PdfExportUtil;
 import com.google.android.material.tabs.TabLayout;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class ReportsActivity extends AppCompatActivity {
 
@@ -66,8 +69,12 @@ public class ReportsActivity extends AppCompatActivity {
     private void setupListeners() {
         binding.btnBack.setOnClickListener(v -> finish());
         
-        binding.btnExportAll.setOnClickListener(v -> {
+        binding.btnExportCsv.setOnClickListener(v -> {
             exportAllReports();
+        });
+        
+        binding.btnExportPdf.setOnClickListener(v -> {
+            exportReportsPdf();
         });
         
         binding.tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -169,6 +176,36 @@ public class ReportsActivity extends AppCompatActivity {
         } catch (Exception e) {
             Toast.makeText(this, "Export failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void exportReportsPdf() {
+        if (sales.isEmpty()) {
+            Toast.makeText(this, "No data to export", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        double totalRevenue = 0;
+        for (Sale sale : sales) {
+            totalRevenue += sale.getFinalAmount();
+        }
+        
+        Map<String, Object> dailyData = new HashMap<>();
+        List<Map<String, Object>> dailySales = new ArrayList<>();
+        
+        String today = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new java.util.Date());
+        for (Sale sale : sales) {
+            Map<String, Object> saleMap = new HashMap<>();
+            saleMap.put("date", sale.getCreatedAt() != null ? sale.getCreatedAt().substring(0, 10) : "");
+            saleMap.put("amount", sale.getFinalAmount());
+            saleMap.put("items", 1);
+            saleMap.put("status", "completed");
+            dailySales.add(saleMap);
+        }
+        dailyData.put("sales", dailySales);
+        
+        Map<String, Object> monthlyData = new HashMap<>();
+        
+        PdfExportUtil.exportReports(this, dailyData, monthlyData, totalRevenue, sales.size());
     }
 
     private void loadSales() {

@@ -41,6 +41,9 @@ dependencies {
     implementation libs.drawerlayout
     implementation libs.biometric
     implementation libs.swiperefreshlayout
+    implementation libs.mpchart
+    implementation libs.itext
+    implementation libs.poi
     
     implementation libs.okhttp
     implementation libs.gson

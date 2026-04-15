@@ -19,13 +19,16 @@ import com.dtcteam.pypos.databinding.DialogItemFormBinding;
 import com.dtcteam.pypos.model.Category;
 import com.dtcteam.pypos.model.Item;
 import com.dtcteam.pypos.ui.common.SkeletonAdapter;
+import com.dtcteam.pypos.util.PdfExportUtil;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ItemsActivity extends AppCompatActivity {
 
@@ -88,6 +91,10 @@ public class ItemsActivity extends AppCompatActivity {
         
         binding.btnExport.setOnClickListener(v -> {
             exportItems();
+        });
+        
+        binding.btnExportPdf.setOnClickListener(v -> {
+            exportItemsPdf();
         });
         
         binding.btnAdd.setOnClickListener(v -> showItemDialog(null));
@@ -394,6 +401,28 @@ public class ItemsActivity extends AppCompatActivity {
         } catch (Exception e) {
             Toast.makeText(this, "Export failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void exportItemsPdf() {
+        if (items.isEmpty()) {
+            Toast.makeText(this, "No items to export", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        java.util.List<Map<String, Object>> exportData = new ArrayList<>();
+        for (Item item : items) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("sku", item.getSku());
+            row.put("name", item.getName());
+            row.put("category", item.getCategoryName());
+            row.put("unit_price", item.getUnitPrice());
+            row.put("cost_price", item.getCost());
+            row.put("quantity", item.getQuantity());
+            row.put("min_stock_level", item.getMinStockLevel());
+            exportData.add(row);
+        }
+        
+        PdfExportUtil.exportItems(this, exportData);
     }
 
     private void downloadTemplate() {
