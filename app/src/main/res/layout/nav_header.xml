@@ -8,10 +8,11 @@
     android:padding="16dp">
 
     <ImageView
+        android:id="@+id/ivLogo"
         android:layout_width="64dp"
         android:layout_height="64dp"
-        android:src="@drawable/ic_launcher_foreground"
-        android:background="@drawable/ic_launcher_background"
+        android:src="@drawable/logo1"
+        android:scaleType="centerCrop"
         android:contentDescription="Logo" />
 
     <TextView
