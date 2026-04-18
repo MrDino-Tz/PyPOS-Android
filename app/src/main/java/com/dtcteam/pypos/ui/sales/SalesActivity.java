@@ -1,6 +1,9 @@
 package com.dtcteam.pypos.ui.sales;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -35,6 +38,17 @@ public class SalesActivity extends AppCompatActivity {
         setupRecyclerView();
         setupListeners();
         loadSales();
+        
+        // Auto-refresh every 10 seconds for real-time like feel
+        Handler handler = new Handler(Looper.getMainLooper());
+        Runnable refreshRunnable = new Runnable() {
+            @Override
+            public void run() {
+                loadSales(false);
+                handler.postDelayed(this, 10000);
+            }
+        };
+        handler.postDelayed(refreshRunnable, 10000);
     }
 
     private void setupRecyclerView() {
@@ -58,10 +72,25 @@ public class SalesActivity extends AppCompatActivity {
     private void setupListeners() {
         binding.btnBack.setOnClickListener(v -> finish());
         binding.btnRefresh.setOnClickListener(v -> loadSales());
+        
+        binding.cardToday.setOnClickListener(v -> openSalesDetail("today"));
+        binding.cardWeek.setOnClickListener(v -> openSalesDetail("week"));
+        binding.cardMonth.setOnClickListener(v -> openSalesDetail("month"));
+        binding.cardYear.setOnClickListener(v -> openSalesDetail("year"));
+    }
+
+    private void openSalesDetail(String period) {
+        Intent intent = new Intent(this, SalesDetailActivity.class);
+        intent.putExtra("period", period);
+        startActivity(intent);
     }
 
     private void loadSales() {
-        showSkeleton(true);
+        loadSales(false);
+    }
+    
+    private void loadSales(boolean showSkeleton) {
+        if (showSkeleton) showSkeleton(true);
         binding.loadingIndicator.setVisibility(View.VISIBLE);
         
         api.getSales(new ApiService.Callback<List<Sale>>() {
@@ -89,16 +118,18 @@ public class SalesActivity extends AppCompatActivity {
     private void updateSummaryCards() {
         NumberFormat nf = NumberFormat.getNumberInstance(usLocale);
         
+        // Use local date (same as web) to match user's local day
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+        String todayKey = sdf.format(new java.util.Date()) + "T";
+        
+        sdf.applyPattern("yyyy-MM");
+        String thisMonth = sdf.format(new java.util.Date());
+        
+        sdf.applyPattern("yyyy");
+        String thisYear = sdf.format(new java.util.Date());
+        
+        // Also use timestamps for week calculation
         Calendar cal = Calendar.getInstance();
-        
-        // Today
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        long todayStart = cal.getTimeInMillis();
-        
-        // This week (start of week - Monday)
         cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
@@ -106,50 +137,38 @@ public class SalesActivity extends AppCompatActivity {
         cal.set(Calendar.MILLISECOND, 0);
         long weekStart = cal.getTimeInMillis();
         
-        // This month
-        cal.set(Calendar.DAY_OF_MONTH, 1);
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        long monthStart = cal.getTimeInMillis();
-        
-        // This year
-        cal.set(Calendar.DAY_OF_YEAR, 1);
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        long yearStart = cal.getTimeInMillis();
-        
         double todayTotal = 0, weekTotal = 0, monthTotal = 0, yearTotal = 0;
         int todayCount = 0, weekCount = 0, monthCount = 0, yearCount = 0;
         
         for (Sale sale : sales) {
-            long saleTime = 0;
-            try {
-                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
-                if (sale.getCreatedAt() != null) {
-                    java.util.Date date = sdf.parse(sale.getCreatedAt());
-                    if (date != null) saleTime = date.getTime();
-                }
-            } catch (Exception e) {
-                // Skip invalid dates
-            }
+            String createdAt = sale.getCreatedAt();
+            if (createdAt == null) continue;
             
-            if (saleTime >= todayStart) {
+            // Today: starts with today's date (same as web)
+            if (createdAt.startsWith(todayKey)) {
                 todayTotal += sale.getFinalAmount();
                 todayCount++;
             }
+            
+            // Week/Month/Year: use timestamp comparison
+            long saleTime = 0;
+            try {
+                java.text.SimpleDateFormat sdf2 = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
+                java.util.Date date = sdf2.parse(createdAt);
+                if (date != null) saleTime = date.getTime();
+            } catch (Exception e) {
+                // skip
+            }
+            
             if (saleTime >= weekStart) {
                 weekTotal += sale.getFinalAmount();
                 weekCount++;
             }
-            if (saleTime >= monthStart) {
+            if (createdAt.startsWith(thisMonth)) {
                 monthTotal += sale.getFinalAmount();
                 monthCount++;
             }
-            if (saleTime >= yearStart) {
+            if (createdAt.startsWith(thisYear)) {
                 yearTotal += sale.getFinalAmount();
                 yearCount++;
             }

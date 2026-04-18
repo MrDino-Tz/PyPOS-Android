@@ -123,59 +123,53 @@ public class SalesDetailActivity extends AppCompatActivity {
 
     private List<Sale> filterSalesByPeriod(List<Sale> allSales) {
         List<Sale> filtered = new ArrayList<>();
-        String todayPrefix = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date()) + "T";
+        
+        // Use local date (same as web) to match user's local day
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String todayPrefix = sdf.format(new Date()) + "T";
+        
+        sdf.applyPattern("yyyy-MM");
+        String thisMonth = sdf.format(new Date());
+        
+        sdf.applyPattern("yyyy");
+        String thisYear = sdf.format(new Date());
         
         Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
-        Date weekStart = cal.getTime();
-        cal.add(Calendar.DATE, -cal.get(Calendar.DAY_OF_WEEK) + 7);
-        
-        cal = Calendar.getInstance();
-        cal.set(Calendar.DAY_OF_MONTH, 1);
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        Date monthStart = cal.getTime();
-        
-        cal = Calendar.getInstance();
-        cal.set(Calendar.MONTH, Calendar.JANUARY);
-        cal.set(Calendar.DAY_OF_MONTH, 1);
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        Date yearStart = cal.getTime();
+        long weekStart = cal.getTimeInMillis();
 
         for (Sale sale : allSales) {
-            if (sale.getCreatedAt() == null) continue;
+            String createdAt = sale.getCreatedAt();
+            if (createdAt == null) continue;
             
-            try {
-                Date saleDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).parse(sale.getCreatedAt());
-                if (saleDate == null) continue;
-                
-                boolean matches = false;
-                switch (period) {
-                    case "today":
-                        matches = sale.getCreatedAt().startsWith(todayPrefix);
-                        break;
-                    case "week":
-                        matches = saleDate.after(weekStart);
-                        break;
-                    case "month":
-                        matches = saleDate.after(monthStart);
-                        break;
-                    case "year":
-                        matches = saleDate.after(yearStart);
-                        break;
-                    default:
-                        matches = true;
-                }
-                if (matches) filtered.add(sale);
-            } catch (Exception e) {
-                // skip invalid dates
+            boolean matches = false;
+            switch (period) {
+                case "today":
+                    matches = createdAt.startsWith(todayPrefix);
+                    break;
+                case "week":
+                case "month":
+                case "year":
+                    // Use string matching for month/year, timestamp for week
+                    if (period.equals("week")) {
+                        try {
+                            Date saleDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).parse(createdAt);
+                            if (saleDate != null) matches = saleDate.getTime() >= weekStart;
+                        } catch (Exception e) {}
+                    } else if (period.equals("month")) {
+                        matches = createdAt != null && createdAt.startsWith(thisMonth);
+                    } else if (period.equals("year")) {
+                        matches = createdAt != null && createdAt.startsWith(thisYear);
+                    }
+                    break;
+                default:
+                    matches = true;
             }
+            if (matches) filtered.add(sale);
         }
         return filtered;
     }

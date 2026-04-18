@@ -63,10 +63,13 @@
 
             <!-- Today -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardToday"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
                 app:cardBackgroundColor="@color/surface"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
@@ -110,9 +113,12 @@
 
             <!-- This Week -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardWeek"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
                 app:cardBackgroundColor="@color/surface"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
@@ -166,10 +172,13 @@
 
             <!-- This Month -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardMonth"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
                 app:cardBackgroundColor="@color/surface"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
@@ -213,9 +222,12 @@
 
             <!-- This Year -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardYear"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
                 app:cardBackgroundColor="@color/surface"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
