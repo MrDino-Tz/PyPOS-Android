@@ -405,6 +405,7 @@ public class ApiService {
         saleBody.addProperty("final_amount", total - discountAmount);
         saleBody.addProperty("discount_amount", discountAmount);
         saleBody.addProperty("payment_method", paymentMethod);
+        saleBody.addProperty("created_at", new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).format(new java.util.Date()) + "Z");
         if (customerName != null) {
             saleBody.addProperty("customer_name", customerName);
         }

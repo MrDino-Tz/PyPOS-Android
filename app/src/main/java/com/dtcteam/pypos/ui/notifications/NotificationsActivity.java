@@ -123,7 +123,7 @@ public class NotificationsActivity extends AppCompatActivity {
         }
         
         // Today's summary
-        String today = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new java.util.Date());
+        String today = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new java.util.Date()) + "T";
         int todayCount = 0;
         double todayTotal = 0;
         for (Sale sale : sales) {

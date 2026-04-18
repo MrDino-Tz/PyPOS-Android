@@ -69,12 +69,16 @@ public class ReportsActivity extends AppCompatActivity {
     private void setupListeners() {
         binding.btnBack.setOnClickListener(v -> finish());
         
-        binding.btnExportCsv.setOnClickListener(v -> {
-            exportAllReports();
+        binding.btnExportDaily.setOnClickListener(v -> {
+            exportDailyPdf();
         });
         
-        binding.btnExportPdf.setOnClickListener(v -> {
-            exportReportsPdf();
+        binding.btnExportMonthly.setOnClickListener(v -> {
+            exportMonthlyPdf();
+        });
+        
+        binding.btnExportYearly.setOnClickListener(v -> {
+            exportYearlyPdf();
         });
         
         binding.tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -112,7 +116,7 @@ public class ReportsActivity extends AppCompatActivity {
     private void loadDailyData() {
         double todayTotal = 0;
         int todayCount = 0;
-        String today = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new java.util.Date());
+        String today = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new java.util.Date()) + "T";
         
         for (Sale sale : sales) {
             if (sale.getCreatedAt() != null && sale.getCreatedAt().startsWith(today)) {
@@ -149,74 +153,118 @@ public class ReportsActivity extends AppCompatActivity {
         binding.tvMonthlyRevenue.setText("Stock movements");
     }
     
-    private void exportAllReports() {
+    private void exportDailyPdf() {
         if (sales.isEmpty()) {
             Toast.makeText(this, "No data to export", Toast.LENGTH_SHORT).show();
             return;
         }
         
-        StringBuilder csv = new StringBuilder();
-        csv.append("Sale ID,Date,Total Amount,Final Amount,Payment Method\n");
+        String today = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new java.util.Date()) + "T";
+        double dailyTotal = 0;
+        List<Sale> dailySales = new ArrayList<>();
         
         for (Sale sale : sales) {
-            csv.append(sale.getId()).append(",");
-            csv.append("\"").append(sale.getCreatedAt()).append("\",");
-            csv.append(sale.getTotalAmount()).append(",");
-            csv.append(sale.getFinalAmount()).append(",");
-            csv.append("\"").append(sale.getPaymentMethod()).append("\"\n");
-        }
-        
-        String fileName = "reports_export_" + System.currentTimeMillis() + ".csv";
-        
-        try {
-            java.io.File downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS);
-            java.io.File pyposDir = new java.io.File(downloadsDir, "PyPOS");
-            if (!pyposDir.exists()) {
-                pyposDir.mkdirs();
+            if (sale.getCreatedAt() != null && sale.getCreatedAt().startsWith(today)) {
+                dailySales.add(sale);
+                dailyTotal += sale.getFinalAmount();
             }
-            java.io.File file = new java.io.File(pyposDir, fileName);
-            java.io.FileWriter writer = new java.io.FileWriter(file);
-            writer.write(csv.toString());
-            writer.close();
-            
-            android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-            intent.setData(android.net.Uri.fromFile(file));
-            sendBroadcast(intent);
-            
-            Toast.makeText(this, "Saved to Downloads/PyPOS/" + fileName, Toast.LENGTH_LONG).show();
-        } catch (Exception e) {
-            Toast.makeText(this, "Export failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void exportReportsPdf() {
-        if (sales.isEmpty()) {
-            Toast.makeText(this, "No data to export", Toast.LENGTH_SHORT).show();
-            return;
         }
         
-        double totalRevenue = 0;
-        for (Sale sale : sales) {
-            totalRevenue += sale.getFinalAmount();
+        if (dailySales.isEmpty()) {
+            Toast.makeText(this, "No sales data for today", Toast.LENGTH_SHORT).show();
+            return;
         }
         
         Map<String, Object> dailyData = new HashMap<>();
-        List<Map<String, Object>> dailySales = new ArrayList<>();
+        List<Map<String, Object>> salesList = new ArrayList<>();
         
-        String today = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new java.util.Date());
-        for (Sale sale : sales) {
+        for (Sale sale : dailySales) {
             Map<String, Object> saleMap = new HashMap<>();
-            saleMap.put("date", sale.getCreatedAt() != null ? sale.getCreatedAt().substring(0, 10) : "");
+            saleMap.put("date", sale.getCreatedAt() != null ? sale.getCreatedAt().substring(0, 16) : "");
             saleMap.put("amount", sale.getFinalAmount());
-            saleMap.put("items", 1);
+            saleMap.put("items", sale.getSaleItems() != null ? sale.getSaleItems().size() : 0);
             saleMap.put("status", "completed");
-            dailySales.add(saleMap);
+            salesList.add(saleMap);
         }
-        dailyData.put("sales", dailySales);
+        dailyData.put("sales", salesList);
+        
+        PdfExportUtil.exportReports(this, dailyData, new HashMap<>(), dailyTotal, dailySales.size());
+    }
+
+    private void exportMonthlyPdf() {
+        if (sales.isEmpty()) {
+            Toast.makeText(this, "No data to export", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        String thisMonth = new java.text.SimpleDateFormat("yyyy-MM", Locale.US).format(new java.util.Date());
+        double monthlyTotal = 0;
+        List<Sale> monthlySales = new ArrayList<>();
+        
+        for (Sale sale : sales) {
+            if (sale.getCreatedAt() != null && sale.getCreatedAt().startsWith(thisMonth)) {
+                monthlySales.add(sale);
+                monthlyTotal += sale.getFinalAmount();
+            }
+        }
+        
+        if (monthlySales.isEmpty()) {
+            Toast.makeText(this, "No sales data for this month", Toast.LENGTH_SHORT).show();
+            return;
+        }
         
         Map<String, Object> monthlyData = new HashMap<>();
+        List<Map<String, Object>> salesList = new ArrayList<>();
         
-        PdfExportUtil.exportReports(this, dailyData, monthlyData, totalRevenue, sales.size());
+        for (Sale sale : monthlySales) {
+            Map<String, Object> saleMap = new HashMap<>();
+            saleMap.put("date", sale.getCreatedAt() != null ? sale.getCreatedAt().substring(0, 16) : "");
+            saleMap.put("amount", sale.getFinalAmount());
+            saleMap.put("items", sale.getSaleItems() != null ? sale.getSaleItems().size() : 0);
+            saleMap.put("status", "completed");
+            salesList.add(saleMap);
+        }
+        monthlyData.put("sales", salesList);
+        
+        PdfExportUtil.exportReports(this, new HashMap<>(), monthlyData, monthlyTotal, monthlySales.size());
+    }
+
+    private void exportYearlyPdf() {
+        if (sales.isEmpty()) {
+            Toast.makeText(this, "No data to export", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        String thisYear = new java.text.SimpleDateFormat("yyyy", Locale.US).format(new java.util.Date());
+        double yearlyTotal = 0;
+        List<Sale> yearlySales = new ArrayList<>();
+        
+        for (Sale sale : sales) {
+            if (sale.getCreatedAt() != null && sale.getCreatedAt().startsWith(thisYear)) {
+                yearlySales.add(sale);
+                yearlyTotal += sale.getFinalAmount();
+            }
+        }
+        
+        if (yearlySales.isEmpty()) {
+            Toast.makeText(this, "No sales data for this year", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        Map<String, Object> yearlyData = new HashMap<>();
+        List<Map<String, Object>> salesList = new ArrayList<>();
+        
+        for (Sale sale : yearlySales) {
+            Map<String, Object> saleMap = new HashMap<>();
+            saleMap.put("date", sale.getCreatedAt() != null ? sale.getCreatedAt().substring(0, 16) : "");
+            saleMap.put("amount", sale.getFinalAmount());
+            saleMap.put("items", sale.getSaleItems() != null ? sale.getSaleItems().size() : 0);
+            saleMap.put("status", "completed");
+            salesList.add(saleMap);
+        }
+        yearlyData.put("sales", salesList);
+        
+        PdfExportUtil.exportReports(this, yearlyData, new HashMap<>(), yearlyTotal, yearlySales.size());
     }
 
     private void loadSales() {
@@ -235,7 +283,7 @@ public class ReportsActivity extends AppCompatActivity {
                 
                 if (result != null) {
                     sales.addAll(result);
-                    String today = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new java.util.Date());
+                    String today = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new java.util.Date()) + "T";
                     
                     for (Sale sale : result) {
                         totalSales += sale.getFinalAmount();

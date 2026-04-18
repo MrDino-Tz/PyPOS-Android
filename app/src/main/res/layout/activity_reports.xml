@@ -36,21 +36,30 @@
             android:textStyle="bold" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnExportCsv"
+            android:id="@+id/btnExportDaily"
             style="@style/Widget.Material3.Button.TonalButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Export CSV"
-            android:textSize="12sp" />
+            android:text="Daily"
+            android:textSize="11sp" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnExportPdf"
+            android:id="@+id/btnExportMonthly"
             style="@style/Widget.Material3.Button.TonalButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="Export PDF"
-            android:textSize="12sp" />
+            android:layout_marginStart="4dp"
+            android:text="Monthly"
+            android:textSize="11sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnExportYearly"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="Yearly"
+            android:textSize="11sp" />
 
     </LinearLayout>
 

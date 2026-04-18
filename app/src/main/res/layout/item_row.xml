@@ -105,27 +105,28 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:orientation="vertical">
+            android:layout_marginStart="12dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
             <ImageButton
                 android:id="@+id/btnEdit"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:background="@drawable/bg_button_primary"
                 android:contentDescription="Edit"
-                android:padding="8dp"
+                android:padding="10dp"
                 android:src="@drawable/ic_edit"
                 app:tint="@color/white" />
 
             <ImageButton
                 android:id="@+id/btnDelete"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginTop="4dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
                 android:background="@drawable/bg_button_danger"
                 android:contentDescription="Delete"
-                android:padding="8dp"
+                android:padding="10dp"
                 android:src="@drawable/ic_trash"
                 app:tint="@color/white" />
 
