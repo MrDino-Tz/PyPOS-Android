@@ -309,28 +309,6 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Tax (10%)"
-                            android:textColor="@color/text_secondary" />
-
-                        <TextView
-                            android:id="@+id/tvTax"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="TSH 0"
-                            android:textColor="@color/text_primary" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
                             android:text="Discount"
                             android:textColor="@color/text_secondary" />
 

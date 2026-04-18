@@ -442,15 +442,13 @@ return card;
             count += item.getQuantity();
         }
         
-        double tax = subtotal * 0.10; // 10% tax
         double discount = 0;
-        double total = subtotal + tax - discount;
+        double total = subtotal - discount;
         
         java.text.NumberFormat nf = java.text.NumberFormat.getNumberInstance(java.util.Locale.US);
         
         binding.tvTotal.setText("TSH " + nf.format((long) total));
         binding.tvSubtotal.setText("TSH " + nf.format((long) subtotal));
-        binding.tvTax.setText("TSH " + nf.format((long) tax));
         binding.tvDiscount.setText("TSH " + nf.format((long) discount));
         
         // Show/hide FAB based on cart
@@ -475,8 +473,7 @@ return card;
         for (CartItem item : cart) {
             subtotal += item.getSubtotal();
         }
-        double tax = subtotal * 0.10;
-        return subtotal + tax;
+        return subtotal;
     }
 
     private void processCheckout() {
