@@ -35,15 +35,38 @@
                 android:layout_height="0dp"
                 android:layout_weight="1" />
 
-            <ImageButton
-                android:id="@+id/btnNotifications"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_round_gray"
-                android:contentDescription="Notifications"
-                android:padding="8dp"
-                android:src="@drawable/ic_notification"
-                app:tint="@color/text_primary" />
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <ImageButton
+                    android:id="@+id/btnNotifications"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_round_gray"
+                    android:contentDescription="Notifications"
+                    android:padding="8dp"
+                    android:src="@drawable/bell_24"
+                    app:tint="@color/text_primary" />
+
+                <TextView
+                    android:id="@+id/badgeCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|end"
+                    android:layout_marginStart="28dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_badge"
+                    android:gravity="center"
+                    android:paddingStart="6dp"
+                    android:paddingEnd="6dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp"
+                    android:textColor="@android:color/white"
+                    android:textSize="10dp"
+                    android:visibility="gone" />
+
+            </FrameLayout>
 
         </LinearLayout>
 

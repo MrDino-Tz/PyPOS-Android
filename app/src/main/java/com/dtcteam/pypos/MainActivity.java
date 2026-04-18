@@ -1,7 +1,11 @@
 package com.dtcteam.pypos;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -12,6 +16,8 @@ import androidx.core.view.GravityCompat;
 import androidx.fragment.app.Fragment;
 import com.dtcteam.pypos.api.ApiService;
 import com.dtcteam.pypos.databinding.ActivityMainBinding;
+import com.dtcteam.pypos.model.Item;
+import com.dtcteam.pypos.model.Sale;
 import com.dtcteam.pypos.model.User;
 import com.dtcteam.pypos.ui.account.AccountFragment;
 import com.dtcteam.pypos.ui.categories.CategoriesFragment;
@@ -28,11 +34,19 @@ import com.dtcteam.pypos.ui.settings.SettingsFragment;
 import com.dtcteam.pypos.ui.login.LoginActivity;
 import com.dtcteam.pypos.ui.notifications.NotificationsActivity;
 import com.google.android.material.navigation.NavigationView;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private ActivityMainBinding binding;
     private final ApiService api = ApiService.getInstance();
+    private SharedPreferences prefs;
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable poller;
+    private TextView badgeCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,9 +54,96 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        prefs = getSharedPreferences("pypos_prefs", MODE_PRIVATE);
+        
+        badgeCount = binding.badgeCount;
+        startPolling();
         checkAuth();
         setupNavigation();
         setupDrawer();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateBadge();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (poller != null) handler.removeCallbacks(poller);
+}
+    
+    private void startPolling() {
+        poller = new Runnable() {
+            @Override
+            public void run() {
+                updateBadge();
+                handler.postDelayed(this, 10000);
+            }
+        };
+        handler.post(poller);
+    }
+
+    private void updateBadge() {
+        api.getItems(null, null, new ApiService.Callback<List<Item>>() {
+            @Override
+            public void onSuccess(List<Item> items) {
+                api.getSales(new ApiService.Callback<List<Sale>>() {
+                    @Override
+                    public void onSuccess(List<Sale> sales) {
+                        int unread = calculateUnread(items, sales);
+                        runOnUiThread(() -> {
+                            if (unread > 0) {
+                                badgeCount.setText(String.valueOf(unread > 9 ? "9+" : unread));
+                                badgeCount.setVisibility(View.VISIBLE);
+                            } else {
+                                badgeCount.setVisibility(View.GONE);
+                            }
+                        });
+                    }
+                    @Override public void onError(String error) {}
+                });
+            }
+            @Override public void onError(String error) {}
+        });
+    }
+
+    private int calculateUnread(List<Item> items, List<Sale> sales) {
+        Set<String> readIds = prefs.getStringSet("read_notifications", new HashSet<>());
+        int count = 0;
+        if (items != null) {
+            for (Item item : items) {
+                String id = "low-stock-" + item.getId();
+                if (!readIds.contains(id) && item.getQuantity() <= item.getMinStockLevel() && item.getQuantity() > 0) count++;
+                id = "out-stock-" + item.getId();
+                if (!readIds.contains(id) && item.getQuantity() <= 0) count++;
+            }
+        }
+        return count;
+    }
+
+    private void markAllRead() {
+        api.getItems(null, null, new ApiService.Callback<List<Item>>() {
+            @Override
+            public void onSuccess(List<Item> items) {
+                Set<String> readIds = new HashSet<>();
+                if (items != null) {
+                    for (Item item : items) {
+                        if (item.getQuantity() <= item.getMinStockLevel()) {
+                            readIds.add("low-stock-" + item.getId());
+                        }
+                        if (item.getQuantity() <= 0) {
+                            readIds.add("out-stock-" + item.getId());
+                        }
+                    }
+                }
+                prefs.edit().putStringSet("read_notifications", readIds).apply();
+                runOnUiThread(() -> badgeCount.setVisibility(View.GONE));
+            }
+            @Override public void onError(String error) {}
+        });
     }
 
     private void checkAuth() {
@@ -97,6 +198,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
         binding.btnNotifications.setOnClickListener(v -> {
+            markAllRead();
             Intent intent = new Intent(this, NotificationsActivity.class);
             startActivity(intent);
         });
