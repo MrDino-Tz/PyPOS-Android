@@ -220,8 +220,6 @@ public class SalesDetailActivity extends AppCompatActivity {
         binding.tvPaymentMethod.setText("Cash");
         binding.tvCashier.setText("System");
         binding.tvSubtotal.setText("TSH " + currencyFormat.format(sale.getFinalAmount()));
-        binding.tvTax.setText("TSH 0");
-        binding.tvDiscount.setText("TSH 0");
     }
 
     private void printReceipt() {

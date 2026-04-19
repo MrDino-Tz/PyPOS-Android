@@ -442,14 +442,10 @@ return card;
             count += item.getQuantity();
         }
         
-        double discount = 0;
-        double total = subtotal - discount;
-        
         java.text.NumberFormat nf = java.text.NumberFormat.getNumberInstance(java.util.Locale.US);
         
-        binding.tvTotal.setText("TSH " + nf.format((long) total));
+        binding.tvTotal.setText("TSH " + nf.format((long) subtotal));
         binding.tvSubtotal.setText("TSH " + nf.format((long) subtotal));
-        binding.tvDiscount.setText("TSH " + nf.format((long) discount));
         
         // Show/hide FAB based on cart
         if (cart.isEmpty()) {

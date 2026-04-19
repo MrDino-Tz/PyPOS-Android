@@ -1,6 +1,8 @@
 package com.dtcteam.pypos.ui.dashboard;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +28,8 @@ public class DashboardFragment extends Fragment {
     private LowStockAdapter lowStockAdapter;
     private ArrayList<Sale> recentSales = new ArrayList<>();
     private ArrayList<Item> lowStockItems = new ArrayList<>();
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable poller;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -39,6 +43,18 @@ public class DashboardFragment extends Fragment {
         setupRecyclerViews();
         setupClickListeners();
         loadDashboard();
+        startPolling();
+    }
+
+    private void startPolling() {
+        poller = new Runnable() {
+            @Override
+            public void run() {
+                loadDashboard();
+                handler.postDelayed(this, 10000);
+            }
+        };
+        handler.post(poller);
     }
 
     private void setupRecyclerViews() {
@@ -144,6 +160,7 @@ public class DashboardFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (poller != null) handler.removeCallbacks(poller);
         binding = null;
     }
 }
