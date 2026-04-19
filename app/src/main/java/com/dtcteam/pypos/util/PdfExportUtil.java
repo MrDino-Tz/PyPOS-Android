@@ -2,12 +2,16 @@ package com.dtcteam.pypos.util;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
 
+import com.dtcteam.pypos.R;
+import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
@@ -15,11 +19,13 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -41,16 +47,8 @@ public class PdfExportUtil {
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf);
 
-            document.add(new Paragraph("Pawin Stationery - Items")
-                .setFontSize(18)
-                .setBold()
-                .setTextAlignment(TextAlignment.CENTER));
+addLogosWithTitle(document, context, "Pawin Stationery - Items");
             
-            document.add(new Paragraph("Generated: " + new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()))
-                .setFontSize(10)
-                .setTextAlignment(TextAlignment.CENTER)
-                .setMarginBottom(20));
-
             Table table = new Table(UnitValue.createPercentArray(new float[]{2, 3, 2, 2, 2, 1, 1}));
             table.setWidth(UnitValue.createPercentValue(100));
 
@@ -97,16 +95,8 @@ public class PdfExportUtil {
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf);
 
-            document.add(new Paragraph("Pawin Stationery - Categories")
-                .setFontSize(18)
-                .setBold()
-                .setTextAlignment(TextAlignment.CENTER));
+addLogosWithTitle(document, context, "Pawin Stationery - Categories");
             
-            document.add(new Paragraph("Generated: " + new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()))
-                .setFontSize(10)
-                .setTextAlignment(TextAlignment.CENTER)
-                .setMarginBottom(20));
-
             Table table = new Table(UnitValue.createPercentArray(new float[]{3, 5}));
             table.setWidth(UnitValue.createPercentValue(100));
 
@@ -141,16 +131,9 @@ public class PdfExportUtil {
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf);
 
-            document.add(new Paragraph("Pawin Stationery Report")
-                .setFontSize(18)
-                .setBold()
-                .setTextAlignment(TextAlignment.CENTER));
+addLogosWithTitle(document, context, "Pawin Stationery Report");
             
-            document.add(new Paragraph("Generated: " + new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()))
-                .setFontSize(10)
-                .setTextAlignment(TextAlignment.CENTER)
-                .setMarginBottom(20));
-
+            document.add(new Paragraph("\n"));
             document.add(new Paragraph("Summary")
                 .setFontSize(14)
                 .setBold()
@@ -289,6 +272,40 @@ Table dailyTable = new Table(UnitValue.createPercentArray(new float[]{20, 25, 20
             context.startActivity(viewIntent);
         } catch (Exception e) {
             // Silently fail if no PDF viewer available
+        }
+    }
+
+    private static void addLogosWithTitle(Document document, Context context, String title) {
+        try {
+            try {
+                Bitmap pawinBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.pawin_logo);
+                if (pawinBitmap != null) {
+                    java.io.ByteArrayOutputStream stream = new java.io.ByteArrayOutputStream();
+                    pawinBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                    byte[] byteArray = stream.toByteArray();
+                    Image pawinImage = new Image(ImageDataFactory.create(byteArray));
+                    pawinImage.setWidth(UnitValue.createPercentValue(20));
+                    pawinImage.setHeight(UnitValue.createPercentValue(20));
+                    
+                    Paragraph logoPara = new Paragraph().add(pawinImage);
+                    logoPara.setTextAlignment(TextAlignment.CENTER);
+                    document.add(logoPara);
+                }
+            } catch (Exception e) {
+                // silently fail
+            }
+            
+            Paragraph titlePara = new Paragraph(title).setFontSize(11).setBold().setTextAlignment(TextAlignment.CENTER);
+            titlePara.setMarginTop(2f);
+            titlePara.setMarginBottom(1f);
+            document.add(titlePara);
+            
+            document.add(new Paragraph("Generated: " + new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()))
+                .setFontSize(7)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginBottom(1));
+        } catch (Exception e) {
+            document.add(new Paragraph(title).setFontSize(11).setBold().setTextAlignment(TextAlignment.CENTER));
         }
     }
 }

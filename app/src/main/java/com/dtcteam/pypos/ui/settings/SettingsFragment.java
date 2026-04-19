@@ -124,69 +124,59 @@ public class SettingsFragment extends Fragment {
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
         dialog.setContentView(pinBinding.getRoot());
         
-        final StringBuilder enteredPin = new StringBuilder();
-        final StringBuilder[] firstPin = {new StringBuilder()};
+        final StringBuilder firstPin = new StringBuilder();
         final boolean[] isConfirmMode = {false};
         
-        pinBinding.getRoot().findViewById(R.id.btn1).setOnClickListener(v -> addDigit("1", enteredPin, pinBinding, dialog, isConfirmMode, firstPin));
-        pinBinding.getRoot().findViewById(R.id.btn2).setOnClickListener(v -> addDigit("2", enteredPin, pinBinding, dialog, isConfirmMode, firstPin));
-        pinBinding.getRoot().findViewById(R.id.btn3).setOnClickListener(v -> addDigit("3", enteredPin, pinBinding, dialog, isConfirmMode, firstPin));
-        pinBinding.getRoot().findViewById(R.id.btn4).setOnClickListener(v -> addDigit("4", enteredPin, pinBinding, dialog, isConfirmMode, firstPin));
-        pinBinding.getRoot().findViewById(R.id.btn5).setOnClickListener(v -> addDigit("5", enteredPin, pinBinding, dialog, isConfirmMode, firstPin));
-        pinBinding.getRoot().findViewById(R.id.btn6).setOnClickListener(v -> addDigit("6", enteredPin, pinBinding, dialog, isConfirmMode, firstPin));
-        pinBinding.getRoot().findViewById(R.id.btn7).setOnClickListener(v -> addDigit("7", enteredPin, pinBinding, dialog, isConfirmMode, firstPin));
-        pinBinding.getRoot().findViewById(R.id.btn8).setOnClickListener(v -> addDigit("8", enteredPin, pinBinding, dialog, isConfirmMode, firstPin));
-        pinBinding.getRoot().findViewById(R.id.btn9).setOnClickListener(v -> addDigit("9", enteredPin, pinBinding, dialog, isConfirmMode, firstPin));
-        pinBinding.getRoot().findViewById(R.id.btn0).setOnClickListener(v -> addDigit("0", enteredPin, pinBinding, dialog, isConfirmMode, firstPin));
-        
-        pinBinding.getRoot().findViewById(R.id.btnDelete).setOnClickListener(v -> {
-            if (enteredPin.length() > 0) {
-                enteredPin.deleteCharAt(enteredPin.length() - 1);
-                updatePinDots(pinBinding, enteredPin.length());
+        pinBinding.etHiddenPin.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                String pin = s.toString();
+                updatePinDots(pinBinding, pin.length());
+                
+                if (pin.length() == 4) {
+                    if (!isConfirmMode[0]) {
+                        firstPin.append(pin);
+                        pinBinding.etHiddenPin.setText("");
+                        isConfirmMode[0] = true;
+                        pinBinding.tvError.setText("Confirm your PIN");
+                        pinBinding.tvError.setVisibility(View.VISIBLE);
+                    } else {
+                        if (pin.toString().equals(firstPin.toString())) {
+                            prefs.edit().putString("pin", pin).apply();
+                            dialog.dismiss();
+                            binding.switchPin.setChecked(true);
+                            binding.tvPinStatus.setText("Enabled");
+                            Toast.makeText(requireContext(), "PIN enabled!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            pinBinding.tvError.setText("PINs don't match. Try again.");
+                            pinBinding.tvError.setVisibility(View.VISIBLE);
+                            pinBinding.etHiddenPin.setText("");
+                            firstPin.setLength(0);
+                            isConfirmMode[0] = false;
+                            updatePinDots(pinBinding, 0);
+                        }
+                    }
+                }
             }
         });
         
         pinBinding.tvError.setText("Set your PIN");
+        pinBinding.tvError.setVisibility(View.VISIBLE);
+        pinBinding.etHiddenPin.requestFocus();
         dialog.show();
     }
 
-    private void addDigit(String digit, StringBuilder enteredPin, BottomSheetPinBinding pinBinding, BottomSheetDialog dialog, boolean[] isConfirmMode, StringBuilder[] firstPin) {
-        if (enteredPin.length() < 4) {
-            enteredPin.append(digit);
-            updatePinDots(pinBinding, enteredPin.length());
-            
-            if (enteredPin.length() == 4) {
-                if (!isConfirmMode[0]) {
-                    firstPin[0] = new StringBuilder(enteredPin);
-                    enteredPin.setLength(0);
-                    isConfirmMode[0] = true;
-                    pinBinding.tvError.setText("Confirm your PIN");
-                    updatePinDots(pinBinding, 0);
-                } else {
-                    if (enteredPin.toString().equals(firstPin[0].toString())) {
-                        prefs.edit().putString("pin", enteredPin.toString()).apply();
-                        dialog.dismiss();
-                        binding.switchPin.setChecked(true);
-                        binding.tvPinStatus.setText("Enabled");
-                        Toast.makeText(requireContext(), "PIN enabled!", Toast.LENGTH_SHORT).show();
-                    } else {
-                        pinBinding.tvError.setText("PINs don't match. Try again.");
-                        pinBinding.tvError.setVisibility(View.VISIBLE);
-                        enteredPin.setLength(0);
-                        firstPin[0] = new StringBuilder();
-                        isConfirmMode[0] = false;
-                        updatePinDots(pinBinding, 0);
-                    }
-                }
-            }
-        }
-    }
-
     private void updatePinDots(BottomSheetPinBinding pinBinding, int length) {
-        pinBinding.pinDot1.setBackgroundResource(length >= 1 ? com.dtcteam.pypos.R.drawable.bg_pin_dot : com.dtcteam.pypos.R.drawable.bg_pin_dot_empty);
-        pinBinding.pinDot2.setBackgroundResource(length >= 2 ? com.dtcteam.pypos.R.drawable.bg_pin_dot : com.dtcteam.pypos.R.drawable.bg_pin_dot_empty);
-        pinBinding.pinDot3.setBackgroundResource(length >= 3 ? com.dtcteam.pypos.R.drawable.bg_pin_dot : com.dtcteam.pypos.R.drawable.bg_pin_dot_empty);
-        pinBinding.pinDot4.setBackgroundResource(length >= 4 ? com.dtcteam.pypos.R.drawable.bg_pin_dot : com.dtcteam.pypos.R.drawable.bg_pin_dot_empty);
+        pinBinding.pinDot1.setBackgroundResource(length >= 1 ? com.dtcteam.pypos.R.drawable.bg_pin_circle_filled_large : com.dtcteam.pypos.R.drawable.bg_pin_circle_empty_large);
+        pinBinding.pinDot2.setBackgroundResource(length >= 2 ? com.dtcteam.pypos.R.drawable.bg_pin_circle_filled_large : com.dtcteam.pypos.R.drawable.bg_pin_circle_empty_large);
+        pinBinding.pinDot3.setBackgroundResource(length >= 3 ? com.dtcteam.pypos.R.drawable.bg_pin_circle_filled_large : com.dtcteam.pypos.R.drawable.bg_pin_circle_empty_large);
+        pinBinding.pinDot4.setBackgroundResource(length >= 4 ? com.dtcteam.pypos.R.drawable.bg_pin_circle_filled_large : com.dtcteam.pypos.R.drawable.bg_pin_circle_empty_large);
     }
 
     private void disablePin() {

@@ -5,13 +5,14 @@
     android:layout_height="wrap_content"
     android:background="@color/surface"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="24dp">
 
+    <!-- Subtle drag handle -->
     <View
         android:layout_width="40dp"
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="24dp"
         android:background="@drawable/bg_round_gray" />
 
     <TextView
@@ -23,269 +24,69 @@
         android:textSize="20sp"
         android:textStyle="bold" />
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:layout_marginBottom="16dp"
-        android:gravity="center"
-        android:orientation="horizontal">
+        android:layout_marginTop="40dp"
+        android:layout_marginBottom="32dp">
 
-        <View
-            android:id="@+id/pinDot1"
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:background="@drawable/bg_pin_dot" />
+        <!-- 4 dots mimicking the requested design -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="horizontal">
 
-        <View
-            android:id="@+id/pinDot2"
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:layout_marginStart="12dp"
-            android:background="@drawable/bg_pin_dot_empty" />
+            <View
+                android:id="@+id/pinDot1"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_pin_circle_focused_large" />
 
-        <View
-            android:id="@+id/pinDot3"
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:layout_marginStart="12dp"
-            android:background="@drawable/bg_pin_dot_empty" />
+            <View
+                android:id="@+id/pinDot2"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="16dp"
+                android:background="@drawable/bg_pin_circle_empty_large" />
 
-        <View
-            android:id="@+id/pinDot4"
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:layout_marginStart="12dp"
-            android:background="@drawable/bg_pin_dot_empty" />
+            <View
+                android:id="@+id/pinDot3"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="16dp"
+                android:background="@drawable/bg_pin_circle_empty_large" />
 
-    </LinearLayout>
+            <View
+                android:id="@+id/pinDot4"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="16dp"
+                android:background="@drawable/bg_pin_circle_empty_large" />
+        </LinearLayout>
 
-    <!-- Row 1 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal">
-
-        <FrameLayout
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:layout_margin="4dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn1"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_dialer_button"
-                android:text="1"
-                android:textColor="@color/text_primary"
-                android:textSize="28sp" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:layout_margin="4dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn2"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_dialer_button"
-                android:text="2"
-                android:textColor="@color/text_primary"
-                android:textSize="28sp" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:layout_margin="4dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn3"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_dialer_button"
-                android:text="3"
-                android:textColor="@color/text_primary"
-                android:textSize="28sp" />
-        </FrameLayout>
-
-    </LinearLayout>
-
-    <!-- Row 2 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal">
-
-        <FrameLayout
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:layout_margin="4dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn4"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_dialer_button"
-                android:text="4"
-                android:textColor="@color/text_primary"
-                android:textSize="28sp" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:layout_margin="4dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn5"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_dialer_button"
-                android:text="5"
-                android:textColor="@color/text_primary"
-                android:textSize="28sp" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:layout_margin="4dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn6"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_dialer_button"
-                android:text="6"
-                android:textColor="@color/text_primary"
-                android:textSize="28sp" />
-        </FrameLayout>
-
-    </LinearLayout>
-
-    <!-- Row 3 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal">
-
-        <FrameLayout
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:layout_margin="4dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn7"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_dialer_button"
-                android:text="7"
-                android:textColor="@color/text_primary"
-                android:textSize="28sp" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:layout_margin="4dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn8"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_dialer_button"
-                android:text="8"
-                android:textColor="@color/text_primary"
-                android:textSize="28sp" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:layout_margin="4dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn9"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_dialer_button"
-                android:text="9"
-                android:textColor="@color/text_primary"
-                android:textSize="28sp" />
-        </FrameLayout>
-
-    </LinearLayout>
-
-    <!-- Row 4 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal">
-
-        <View
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:layout_margin="4dp" />
-
-        <FrameLayout
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:layout_margin="4dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn0"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_dialer_button"
-                android:text="0"
-                android:textColor="@color/text_primary"
-                android:textSize="28sp" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:layout_margin="4dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnDelete"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_dialer_button"
-                app:icon="@drawable/ic_backspace"
-                app:iconGravity="textStart"
-                app:iconPadding="0dp"
-                app:iconSize="28dp" />
-        </FrameLayout>
-
-    </LinearLayout>
-
+        <!-- EditText with phone dialer input -->
+        <EditText
+            android:id="@+id/etHiddenPin"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_gravity="center"
+            android:background="@null"
+            android:cursorVisible="false"
+            android:gravity="center"
+            android:inputType="phone"
+            android:maxLength="4"
+            android:textColor="@android:color/transparent"
+            android:textSize="1sp" />
+    </FrameLayout>
+    
     <TextView
         android:id="@+id/tvError"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:gravity="center"
         android:textColor="@color/primary"
         android:textSize="14sp"
-        android:visibility="visible" />
+        android:visibility="gone" />
 
 </LinearLayout>

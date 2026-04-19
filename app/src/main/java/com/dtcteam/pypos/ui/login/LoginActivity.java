@@ -61,47 +61,21 @@ public class LoginActivity extends AppCompatActivity {
         pinBottomSheet = new BottomSheetDialog(this);
         pinBottomSheet.setContentView(pinBinding.getRoot());
 
-        final StringBuilder enteredPin = new StringBuilder();
+        pinBinding.etHiddenPin.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-        View.OnClickListener numberClickListener = v -> {
-            if (enteredPin.length() < 4) {
-                String digit = "";
-                int id = v.getId();
-                if (id == R.id.btn0) digit = "0";
-                else if (id == R.id.btn1) digit = "1";
-                else if (id == R.id.btn2) digit = "2";
-                else if (id == R.id.btn3) digit = "3";
-                else if (id == R.id.btn4) digit = "4";
-                else if (id == R.id.btn5) digit = "5";
-                else if (id == R.id.btn6) digit = "6";
-                else if (id == R.id.btn7) digit = "7";
-                else if (id == R.id.btn8) digit = "8";
-                else if (id == R.id.btn9) digit = "9";
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
 
-                enteredPin.append(digit);
-                updatePinDots(pinBinding, enteredPin.length());
-
-                if (enteredPin.length() == 4) {
-                    verifyPin(enteredPin.toString(), pinBinding);
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                String pin = s.toString();
+                updatePinDots(pinBinding, pin.length());
+                
+                if (pin.length() == 4) {
+                    verifyPin(pin, pinBinding);
                 }
-            }
-        };
-
-        pinBinding.btn0.setOnClickListener(numberClickListener);
-        pinBinding.btn1.setOnClickListener(numberClickListener);
-        pinBinding.btn2.setOnClickListener(numberClickListener);
-        pinBinding.btn3.setOnClickListener(numberClickListener);
-        pinBinding.btn4.setOnClickListener(numberClickListener);
-        pinBinding.btn5.setOnClickListener(numberClickListener);
-        pinBinding.btn6.setOnClickListener(numberClickListener);
-        pinBinding.btn7.setOnClickListener(numberClickListener);
-        pinBinding.btn8.setOnClickListener(numberClickListener);
-        pinBinding.btn9.setOnClickListener(numberClickListener);
-
-        pinBinding.btnDelete.setOnClickListener(v -> {
-            if (enteredPin.length() > 0) {
-                enteredPin.deleteCharAt(enteredPin.length() - 1);
-                updatePinDots(pinBinding, enteredPin.length());
             }
         });
 
@@ -109,10 +83,10 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void updatePinDots(BottomSheetPinBinding pinBinding, int length) {
-        pinBinding.pinDot1.setBackgroundResource(length >= 1 ? R.drawable.bg_pin_dot : R.drawable.bg_pin_dot_empty);
-        pinBinding.pinDot2.setBackgroundResource(length >= 2 ? R.drawable.bg_pin_dot : R.drawable.bg_pin_dot_empty);
-        pinBinding.pinDot3.setBackgroundResource(length >= 3 ? R.drawable.bg_pin_dot : R.drawable.bg_pin_dot_empty);
-        pinBinding.pinDot4.setBackgroundResource(length >= 4 ? R.drawable.bg_pin_dot : R.drawable.bg_pin_dot_empty);
+        pinBinding.pinDot1.setBackgroundResource(length >= 1 ? R.drawable.bg_pin_circle_filled_large : R.drawable.bg_pin_circle_empty_large);
+        pinBinding.pinDot2.setBackgroundResource(length >= 2 ? R.drawable.bg_pin_circle_filled_large : R.drawable.bg_pin_circle_empty_large);
+        pinBinding.pinDot3.setBackgroundResource(length >= 3 ? R.drawable.bg_pin_circle_filled_large : R.drawable.bg_pin_circle_empty_large);
+        pinBinding.pinDot4.setBackgroundResource(length >= 4 ? R.drawable.bg_pin_circle_filled_large : R.drawable.bg_pin_circle_empty_large);
     }
 
     private void verifyPin(String pin, BottomSheetPinBinding pinBinding) {
