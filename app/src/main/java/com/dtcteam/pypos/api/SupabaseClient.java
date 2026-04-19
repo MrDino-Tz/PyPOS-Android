@@ -1,5 +1,6 @@
 package com.dtcteam.pypos.api;
 
+import com.dtcteam.pypos.AppConfig;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -10,8 +11,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class SupabaseClient {
-    private static final String SUPABASE_URL = "https://dbocluzncuhhlrkeggez.supabase.co";
-    private static final String SUPABASE_KEY = "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5";
+    private static final String SUPABASE_URL = AppConfig.getSupabaseUrl();
+    private static final String SUPABASE_KEY = AppConfig.getSupabaseKey();
     
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     
@@ -110,5 +111,9 @@ public class SupabaseClient {
     
     public static String getSUPABASE_URL() {
         return SUPABASE_URL;
+    }
+    
+    public static String getApiKey() {
+        return SUPABASE_KEY;
     }
 }

@@ -2,6 +2,7 @@ package com.dtcteam.pypos.api;
 
 import android.os.Handler;
 import android.os.Looper;
+import com.dtcteam.pypos.AppConfig;
 import com.dtcteam.pypos.model.*;
 import com.google.gson.*;
 import okhttp3.*;
@@ -47,7 +48,7 @@ public class ApiService {
         body.addProperty("email", email);
         body.addProperty("password", password);
 
-        String url = SupabaseClient.getSUPABASE_URL() + "/auth/v1/token?grant_type=password";
+        String url = AppConfig.getSupabaseUrl() + "/auth/v1/token?grant_type=password";
         
         RequestBody requestBody = RequestBody.create(
             supabase.toJson(body),
@@ -56,7 +57,7 @@ public class ApiService {
 
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Content-Type", "application/json")
             .post(requestBody)
             .build();
@@ -140,11 +141,11 @@ public class ApiService {
             return;
         }
 
-        String url = SupabaseClient.getSUPABASE_URL() + "/auth/v1/user";
+        String url = AppConfig.getSupabaseUrl() + "/auth/v1/user";
         
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .get()
             .build();
@@ -186,11 +187,11 @@ public class ApiService {
     }
 
     public void logout(Callback<Void> callback) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/auth/v1/logout";
+        String url = AppConfig.getSupabaseUrl() + "/auth/v1/logout";
         
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .post(RequestBody.create("", SupabaseClient.JSON))
             .build();
@@ -211,11 +212,11 @@ public class ApiService {
     }
 
     public void getCategories(Callback<List<Category>> callback) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/categories?select=*&order=name.asc";
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/categories?select=*&order=name.asc";
         
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .get()
             .build();
@@ -255,7 +256,7 @@ public class ApiService {
     }
 
     public void getItems(String search, Integer categoryId, Callback<List<Item>> callback) {
-        StringBuilder url = new StringBuilder(SupabaseClient.getSUPABASE_URL() + "/rest/v1/items?select=*,categories(name)");
+        StringBuilder url = new StringBuilder(AppConfig.getSupabaseUrl() + "/rest/v1/items?select=*,categories(name)");
         
         List<String> filters = new ArrayList<>();
         if (search != null && !search.isEmpty()) {
@@ -273,7 +274,7 @@ public class ApiService {
 
         Request request = new Request.Builder()
             .url(url.toString())
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .get()
             .build();
@@ -327,11 +328,11 @@ public class ApiService {
     }
 
     public void getSales(Callback<List<Sale>> callback) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/sales?select=*,sale_items(*,items(name))&order=created_at.desc&limit=100";
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/sales?select=*,sale_items(*,items(name))&order=created_at.desc&limit=100";
         
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .get()
             .build();
@@ -410,11 +411,11 @@ public class ApiService {
             saleBody.addProperty("customer_name", customerName);
         }
 
-        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/sales";
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/sales";
         
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .addHeader("Prefer", "return=representation")
             .post(RequestBody.create(saleBody.toString(), SupabaseClient.JSON))
@@ -479,11 +480,11 @@ public class ApiService {
             saleItemBody.addProperty("unit_price", unitPrice);
             saleItemBody.addProperty("subtotal", subtotal);
             
-            String saleItemUrl = SupabaseClient.getSUPABASE_URL() + "/rest/v1/sale_items";
+            String saleItemUrl = AppConfig.getSupabaseUrl() + "/rest/v1/sale_items";
             
             Request saleItemRequest = new Request.Builder()
                 .url(saleItemUrl)
-                .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+                .addHeader("apikey", AppConfig.getSupabaseKey())
                 .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
                 .post(RequestBody.create(saleItemBody.toString(), SupabaseClient.JSON))
                 .build();
@@ -536,11 +537,11 @@ public class ApiService {
     }
     
     private void getItemStock(int itemId, onStockLoaded callback) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/items?id=eq." + itemId + "&select=quantity";
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/items?id=eq." + itemId + "&select=quantity";
         
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .get()
             .build();
@@ -568,14 +569,14 @@ public class ApiService {
     }
     
     private void updateItemStock(int itemId, int quantity, Runnable onComplete) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/items?id=eq." + itemId;
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/items?id=eq." + itemId;
         
         JsonObject body = new JsonObject();
         body.addProperty("quantity", quantity);
         
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .patch(RequestBody.create(body.toString(), SupabaseClient.JSON))
             .build();
@@ -598,55 +599,96 @@ public class ApiService {
     }
 
     public void getDashboardStats(Callback<DashboardStats> callback) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/items?select=id";
-        
-        Request request = new Request.Builder()
-            .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
-            .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
-            .get()
-            .build();
-
-        client.newCall(request).enqueue(new okhttp3.Callback() {
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                try {
-                    String responseBody = response.body().string();
-                    if (response.isSuccessful()) {
-                        JsonArray itemsArray = gson.fromJson(responseBody, JsonArray.class);
-                        int totalItems = itemsArray.size();
-                        
-                        DashboardStats stats = new DashboardStats();
-                        stats.setTotalItems(totalItems);
-                        stats.setLowStockItems(0);
-                        stats.setTodaySales(0);
-                        stats.setTodayTransactions(0);
-                        
-                        mainHandler.post(() -> callback.onSuccess(stats));
-                    } else {
-                        mainHandler.post(() -> callback.onError("Failed to load stats"));
+        new Thread(() -> {
+            try {
+                String apiKey = AppConfig.getSupabaseKey();
+                String baseUrl = AppConfig.getSupabaseUrl();
+                
+                // Get all items
+                String itemsUrl = baseUrl + "/rest/v1/items?select=id,quantity,min_stock_level,is_service";
+                Request itemsRequest = new Request.Builder()
+                    .url(itemsUrl)
+                    .addHeader("apikey", apiKey)
+                    .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+                    .get()
+                    .build();
+                
+                // Get today's sales - use exact date match
+                String today = java.time.LocalDate.now().toString();
+                String salesUrl = baseUrl + "/rest/v1/sales?created_at=gte." + today + "T00:00:00.000Z&created_at=lt." + today + "T23:59:59.999Z&select=final_amount";
+                android.util.Log.d("DASHBOARD", "Sales URL: " + salesUrl);
+                Request salesRequest = new Request.Builder()
+                    .url(salesUrl)
+                    .addHeader("apikey", apiKey)
+                    .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+                    .get()
+                    .build();
+                
+                okhttp3.Response itemsResponse = client.newCall(itemsRequest).execute();
+                okhttp3.Response salesResponse = client.newCall(salesRequest).execute();
+                
+                int totalItems = 0;
+                int lowStockCount = 0;
+                double todaySales = 0;
+                int todayTransactions = 0;
+                
+                if (itemsResponse.isSuccessful()) {
+                    String itemsBody = itemsResponse.body().string();
+                    JsonArray itemsArray = gson.fromJson(itemsBody, JsonArray.class);
+                    totalItems = itemsArray.size();
+                    
+                    for (JsonElement item : itemsArray) {
+                        JsonObject itemObj = item.getAsJsonObject();
+                        boolean isService = itemObj.has("is_service") && itemObj.get("is_service").getAsBoolean();
+                        if (!isService) {
+                            int qty = itemObj.has("quantity") ? itemObj.get("quantity").getAsInt() : 0;
+                            int minStock = itemObj.has("min_stock_level") ? itemObj.get("min_stock_level").getAsInt() : 0;
+                            if (qty <= minStock) {
+                                lowStockCount++;
+                            }
+                        }
                     }
-                } catch (Exception e) {
-                    mainHandler.post(() -> callback.onError(e.getMessage()));
                 }
-            }
-
-            @Override
-            public void onFailure(Call call, IOException e) {
+                
+                if (salesResponse.isSuccessful()) {
+                    String salesBody = salesResponse.body().string();
+                    JsonArray salesArray = gson.fromJson(salesBody, JsonArray.class);
+                    todayTransactions = salesArray.size();
+                    
+                    for (JsonElement sale : salesArray) {
+                        JsonObject saleObj = sale.getAsJsonObject();
+                        if (saleObj.has("final_amount")) {
+                            todaySales += saleObj.get("final_amount").getAsDouble();
+                        }
+                    }
+                }
+                
+                itemsResponse.close();
+                salesResponse.close();
+                
+                DashboardStats stats = new DashboardStats();
+                stats.setTotalItems(totalItems);
+                stats.setLowStockItems(lowStockCount);
+                stats.setTodaySales(todaySales);
+                stats.setTodayTransactions(todayTransactions);
+                
+                mainHandler.post(() -> callback.onSuccess(stats));
+                
+            } catch (Exception e) {
                 mainHandler.post(() -> callback.onError(e.getMessage()));
             }
-        });
+        }).start();
     }
 
     public void updateItem(int id, double newPrice, Callback<Item> callback) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/items?id=eq." + id;
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/items?id=eq." + id;
         
         JsonObject body = new JsonObject();
         body.addProperty("unit_price", newPrice);
         
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .patch(RequestBody.create(body.toString(), SupabaseClient.JSON))
             .build();
@@ -673,11 +715,11 @@ public class ApiService {
     }
 
     public void getLowStockItems(Callback<List<Item>> callback) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/items?select=*&quantity.lt.min_stock_level&is_service.eq.false&order=quantity.asc";
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/items?select=*&quantity.lt.min_stock_level&is_service.eq.false&order=quantity.asc";
         
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .get()
             .build();
@@ -712,7 +754,7 @@ public class ApiService {
     }
 
     public void createItem(Item item, Callback<Item> callback) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/items";
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/items";
         
         JsonObject body = new JsonObject();
         body.addProperty("name", item.getName());
@@ -727,7 +769,7 @@ public class ApiService {
 
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .addHeader("Prefer", "return=representation")
             .post(RequestBody.create(body.toString(), SupabaseClient.JSON))
@@ -758,7 +800,7 @@ public class ApiService {
 
     // Update existing item
     public void updateItem(Item item, Callback<Item> callback) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/items?id=eq." + item.getId();
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/items?id=eq." + item.getId();
         
         JsonObject body = new JsonObject();
         body.addProperty("name", item.getName());
@@ -774,7 +816,7 @@ public class ApiService {
 
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .addHeader("Prefer", "return=representation")
             .patch(RequestBody.create(body.toString(), SupabaseClient.JSON))
@@ -810,11 +852,11 @@ public class ApiService {
     }
 
 public void deleteItem(int itemId, Callback<Void> callback) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/items?id=eq." + itemId;
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/items?id=eq." + itemId;
         
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .delete()
             .build();
@@ -837,13 +879,13 @@ public void deleteItem(int itemId, Callback<Void> callback) {
     }
 
     public void uploadImage(byte[] imageBytes, String fileName, Callback<String> callback) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/storage/v1/object/item-images/" + fileName;
+        String url = AppConfig.getSupabaseUrl() + "/storage/v1/object/item-images/" + fileName;
         
         RequestBody body = RequestBody.create(imageBytes, okhttp3.MediaType.parse("image/*"));
         
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .addHeader("Content-Type", "image/*")
             .post(body)
@@ -853,7 +895,7 @@ public void deleteItem(int itemId, Callback<Void> callback) {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (response.isSuccessful()) {
-                    String publicUrl = SupabaseClient.getSUPABASE_URL() + "/storage/v1/object/public/item-images/" + fileName;
+                    String publicUrl = AppConfig.getSupabaseUrl() + "/storage/v1/object/public/item-images/" + fileName;
                     mainHandler.post(() -> callback.onSuccess(publicUrl));
                 } else {
                     mainHandler.post(() -> callback.onError("Failed to upload image: " + response.code()));
@@ -868,7 +910,7 @@ public void deleteItem(int itemId, Callback<Void> callback) {
     }
 
     public void createCategory(Category category, Callback<Category> callback) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/categories";
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/categories";
         
         JsonObject body = new JsonObject();
         body.addProperty("name", category.getName());
@@ -876,7 +918,7 @@ public void deleteItem(int itemId, Callback<Void> callback) {
 
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .addHeader("Prefer", "return=representation")
             .post(RequestBody.create(body.toString(), SupabaseClient.JSON))
@@ -910,7 +952,7 @@ public void deleteItem(int itemId, Callback<Void> callback) {
     }
 
     public void updateCategory(Category category, Callback<Category> callback) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/categories?id=eq." + category.getId();
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/categories?id=eq." + category.getId();
         
         JsonObject body = new JsonObject();
         body.addProperty("name", category.getName());
@@ -918,7 +960,7 @@ public void deleteItem(int itemId, Callback<Void> callback) {
 
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .addHeader("Prefer", "return=representation")
             .patch(RequestBody.create(body.toString(), SupabaseClient.JSON))
@@ -957,11 +999,11 @@ public void deleteItem(int itemId, Callback<Void> callback) {
     }
 
     public void deleteCategory(int categoryId, Callback<Void> callback) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/categories?id=eq." + categoryId;
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/categories?id=eq." + categoryId;
         
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .delete()
             .build();
@@ -984,11 +1026,11 @@ public void deleteItem(int itemId, Callback<Void> callback) {
     }
 
     public void getUsers(Callback<List<User>> callback) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/users?select=*&order=email.asc";
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/users?select=*&order=email.asc";
         
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .get()
             .build();
@@ -1046,7 +1088,7 @@ public void deleteItem(int itemId, Callback<Void> callback) {
     }
 
     public void createStockMovement(StockMovement movement, Callback<Void> callback) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/stock_movements";
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/stock_movements";
         
         JsonObject body = new JsonObject();
         body.addProperty("item_id", movement.getItemId());
@@ -1057,7 +1099,7 @@ public void deleteItem(int itemId, Callback<Void> callback) {
 
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .post(RequestBody.create(body.toString(), SupabaseClient.JSON))
             .build();
@@ -1080,11 +1122,11 @@ public void deleteItem(int itemId, Callback<Void> callback) {
     }
 
     public void getStockMovements(Callback<List<StockMovement>> callback) {
-        String url = SupabaseClient.getSUPABASE_URL() + "/rest/v1/stock_movements?select=*,items(name)&order=created_at.desc&limit=50";
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/stock_movements?select=*,items(name)&order=created_at.desc&limit=50";
         
         Request request = new Request.Builder()
             .url(url)
-            .addHeader("apikey", "sb_publishable_8tb4LzD6ZvfIUa04TSQSDA_FsSe7vF5")
+            .addHeader("apikey", AppConfig.getSupabaseKey())
             .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
             .get()
             .build();

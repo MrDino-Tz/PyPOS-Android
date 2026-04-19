@@ -290,7 +290,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-        </LinearLayout>`
+        </LinearLayout>
 
         <!-- Recent Sales -->
         <com.google.android.material.card.MaterialCardView
