@@ -34,6 +34,12 @@
     <!-- Border -->
     <color name="border">#404040</color>
     
+    <!-- Card backgrounds for dark mode -->
+    <color name="card_success">#1B3D1B</color>
+    <color name="card_danger">#3D1B1B</color>
+    <color name="card_info">#1B2D3D</color>
+    <color name="card_warning">#3D2E1B</color>
+    
     <!-- Standard -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>

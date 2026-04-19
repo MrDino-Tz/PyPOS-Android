@@ -34,6 +34,12 @@
     <!-- Border -->
     <color name="border">#E5E5E5</color>
     
+    <!-- Card backgrounds for light mode -->
+    <color name="card_success">#E8F5E9</color>
+    <color name="card_danger">#FFEBEE</color>
+    <color name="card_info">#E3F2FD</color>
+    <color name="card_warning">#FFF3E0</color>
+    
     <!-- Switch Colors -->
     <color name="switch_thumb_color">#FFFFFF</color>
     <color name="switch_track_color">#E5E5E5</color>

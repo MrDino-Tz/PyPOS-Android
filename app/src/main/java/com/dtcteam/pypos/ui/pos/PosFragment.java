@@ -455,7 +455,7 @@ return card;
             binding.cartFooter.setVisibility(View.GONE);
         } else {
             binding.cartFab.setVisibility(View.VISIBLE);
-            binding.cartFab.setText("TSH " + nf.format((long) total));
+            binding.cartFab.setText("TSH " + nf.format((long) subtotal));
             binding.emptyCartLayout.setVisibility(View.GONE);
             binding.cartRecyclerView.setVisibility(View.VISIBLE);
             binding.cartFooter.setVisibility(View.VISIBLE);

@@ -66,7 +66,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1"
-                app:cardBackgroundColor="#E8F5E9"
+                app:cardBackgroundColor="@color/card_success"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
                 app:strokeColor="#4CAF50"
@@ -121,7 +121,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
                 android:layout_weight="1"
-                app:cardBackgroundColor="#FFEBEE"
+                app:cardBackgroundColor="@color/card_danger"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
                 app:strokeColor="#F44336"
@@ -185,7 +185,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1"
-                app:cardBackgroundColor="#E3F2FD"
+                app:cardBackgroundColor="@color/card_info"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
                 app:strokeColor="#2196F3"
@@ -240,7 +240,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
                 android:layout_weight="1"
-                app:cardBackgroundColor="#FFF3E0"
+                app:cardBackgroundColor="@color/card_warning"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
                 app:strokeColor="#FF9800"
@@ -290,7 +290,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-        </LinearLayout>
+        </LinearLayout>`
 
         <!-- Recent Sales -->
         <com.google.android.material.card.MaterialCardView
