@@ -12,6 +12,7 @@ import com.dtcteam.pypos.R;
 import com.dtcteam.pypos.api.ApiService;
 import com.dtcteam.pypos.databinding.ActivityReportsBinding;
 import com.dtcteam.pypos.model.Sale;
+import com.dtcteam.pypos.model.SaleItem;
 import com.dtcteam.pypos.ui.sales.SalesAdapter;
 import com.dtcteam.pypos.ui.common.SkeletonAdapter;
 import com.dtcteam.pypos.util.PdfExportUtil;
@@ -199,10 +200,23 @@ public class ReportsActivity extends AppCompatActivity {
         
         for (Sale sale : dailySales) {
             Map<String, Object> saleMap = new HashMap<>();
+            saleMap.put("id", sale.getId());
             saleMap.put("date", sale.getCreatedAt() != null ? sale.getCreatedAt().substring(0, 16) : "");
             saleMap.put("amount", sale.getFinalAmount());
-            saleMap.put("items", sale.getSaleItems() != null ? sale.getSaleItems().size() : 0);
             saleMap.put("status", "completed");
+            
+            List<Map<String, Object>> itemList = new ArrayList<>();
+            if (sale.getSaleItems() != null) {
+                for (SaleItem si : sale.getSaleItems()) {
+                    Map<String, Object> itemMap = new HashMap<>();
+                    itemMap.put("name", si.getItemName() != null ? si.getItemName() : "-");
+                    itemMap.put("price", si.getUnitPrice());
+                    itemMap.put("quantity", si.getQuantity());
+                    itemMap.put("subtotal", si.getSubtotal());
+                    itemList.add(itemMap);
+                }
+            }
+            saleMap.put("items", itemList);
             salesList.add(saleMap);
         }
         dailyData.put("sales", salesList);
@@ -237,10 +251,23 @@ public class ReportsActivity extends AppCompatActivity {
         
         for (Sale sale : monthlySales) {
             Map<String, Object> saleMap = new HashMap<>();
+            saleMap.put("id", sale.getId());
             saleMap.put("date", sale.getCreatedAt() != null ? sale.getCreatedAt().substring(0, 16) : "");
             saleMap.put("amount", sale.getFinalAmount());
-            saleMap.put("items", sale.getSaleItems() != null ? sale.getSaleItems().size() : 0);
             saleMap.put("status", "completed");
+            
+            List<Map<String, Object>> itemList = new ArrayList<>();
+            if (sale.getSaleItems() != null) {
+                for (SaleItem si : sale.getSaleItems()) {
+                    Map<String, Object> itemMap = new HashMap<>();
+                    itemMap.put("name", si.getItemName() != null ? si.getItemName() : "-");
+                    itemMap.put("price", si.getUnitPrice());
+                    itemMap.put("quantity", si.getQuantity());
+                    itemMap.put("subtotal", si.getSubtotal());
+                    itemList.add(itemMap);
+                }
+            }
+            saleMap.put("items", itemList);
             salesList.add(saleMap);
         }
         monthlyData.put("sales", salesList);
@@ -275,10 +302,23 @@ public class ReportsActivity extends AppCompatActivity {
         
         for (Sale sale : yearlySales) {
             Map<String, Object> saleMap = new HashMap<>();
+            saleMap.put("id", sale.getId());
             saleMap.put("date", sale.getCreatedAt() != null ? sale.getCreatedAt().substring(0, 16) : "");
             saleMap.put("amount", sale.getFinalAmount());
-            saleMap.put("items", sale.getSaleItems() != null ? sale.getSaleItems().size() : 0);
             saleMap.put("status", "completed");
+            
+            List<Map<String, Object>> itemList = new ArrayList<>();
+            if (sale.getSaleItems() != null) {
+                for (SaleItem si : sale.getSaleItems()) {
+                    Map<String, Object> itemMap = new HashMap<>();
+                    itemMap.put("name", si.getItemName() != null ? si.getItemName() : "-");
+                    itemMap.put("price", si.getUnitPrice());
+                    itemMap.put("quantity", si.getQuantity());
+                    itemMap.put("subtotal", si.getSubtotal());
+                    itemList.add(itemMap);
+                }
+            }
+            saleMap.put("items", itemList);
             salesList.add(saleMap);
         }
         yearlyData.put("sales", salesList);

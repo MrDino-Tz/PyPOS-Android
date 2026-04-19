@@ -34,14 +34,14 @@ public class PdfExportUtil {
         }
 
         try {
-            String fileName = "items_export_" + System.currentTimeMillis() + ".pdf";
+            String fileName = "Pawin_Stationery_Items_" + System.currentTimeMillis() + ".pdf";
             File file = getOutputFile(context, fileName);
             
             PdfWriter writer = new PdfWriter(new FileOutputStream(file));
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf);
 
-            document.add(new Paragraph("Items Export")
+            document.add(new Paragraph("Pawin Stationery - Items")
                 .setFontSize(18)
                 .setBold()
                 .setTextAlignment(TextAlignment.CENTER));
@@ -90,14 +90,14 @@ public class PdfExportUtil {
         }
 
         try {
-            String fileName = "categories_export_" + System.currentTimeMillis() + ".pdf";
+            String fileName = "Pawin_Stationery_Categories_" + System.currentTimeMillis() + ".pdf";
             File file = getOutputFile(context, fileName);
             
             PdfWriter writer = new PdfWriter(new FileOutputStream(file));
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf);
 
-            document.add(new Paragraph("Categories Export")
+            document.add(new Paragraph("Pawin Stationery - Categories")
                 .setFontSize(18)
                 .setBold()
                 .setTextAlignment(TextAlignment.CENTER));
@@ -134,14 +134,14 @@ public class PdfExportUtil {
 
     public static void exportReports(Context context, Map<String, Object> dailyData, Map<String, Object> monthlyData, double totalRevenue, int totalTransactions) {
         try {
-            String fileName = "reports_export_" + System.currentTimeMillis() + ".pdf";
+            String fileName = "Pawin_Stationery_Report_" + System.currentTimeMillis() + ".pdf";
             File file = getOutputFile(context, fileName);
             
             PdfWriter writer = new PdfWriter(new FileOutputStream(file));
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf);
 
-            document.add(new Paragraph("Sales Reports Export")
+            document.add(new Paragraph("Pawin Stationery Report")
                 .setFontSize(18)
                 .setBold()
                 .setTextAlignment(TextAlignment.CENTER));
@@ -181,24 +181,48 @@ Table dailyTable = new Table(UnitValue.createPercentArray(new float[]{20, 25, 20
             
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> dailySales = (List<Map<String, Object>>) dailyData.get("sales");
-            if (dailySales != null) {
+            if (dailySales != null && !dailySales.isEmpty()) {
                 int receiptNum = 1;
-                double receiptTotal = 0;
-                int itemCount = 0;
                 for (Map<String, Object> sale : dailySales) {
                     @SuppressWarnings("unchecked")
                     List<Map<String, Object>> saleItems = (List<Map<String, Object>>) sale.get("items");
-                    if (saleItems != null) {
+                    if (saleItems != null && !saleItems.isEmpty()) {
                         for (Map<String, Object> item : saleItems) {
                             dailyTable.addCell(createCell(receiptNum == 1 ? "#" + String.valueOf(sale.get("id")) : ""));
                             dailyTable.addCell(createCell(String.valueOf(item.get("name") != null ? item.get("name") : "-")));
-                            dailyTable.addCell(createCell(String.format("TZS %.2f", item.get("price") != null ? (Double) item.get("price") : 0.0)));
-                            dailyTable.addCell(createCell(String.valueOf(item.get("quantity") != null ? item.get("quantity") : "0")));
-                            dailyTable.addCell(createCell(String.format("TZS %.2f", item.get("subtotal") != null ? (Double) item.get("subtotal") : 0.0)));
+                            
+                            Object priceObj = item.get("price");
+                            double price = 0.0;
+                            if (priceObj != null) {
+                                if (priceObj instanceof Double) price = (Double) priceObj;
+                                else if (priceObj instanceof Integer) price = ((Integer) priceObj).doubleValue();
+                                else if (priceObj instanceof Number) price = ((Number) priceObj).doubleValue();
+                            }
+                            dailyTable.addCell(createCell(String.format("TZS %.2f", price)));
+                            
+                            Object qtyObj = item.get("quantity");
+                            int qty = 0;
+                            if (qtyObj != null) {
+                                if (qtyObj instanceof Integer) qty = (Integer) qtyObj;
+                                else if (qtyObj instanceof Number) qty = ((Number) qtyObj).intValue();
+                            }
+                            dailyTable.addCell(createCell(String.valueOf(qty)));
+                            
+                            Object subtotalObj = item.get("subtotal");
+                            double subtotal = 0.0;
+                            if (subtotalObj != null) {
+                                if (subtotalObj instanceof Double) subtotal = (Double) subtotalObj;
+                                else if (subtotalObj instanceof Integer) subtotal = ((Integer) subtotalObj).doubleValue();
+                                else if (subtotalObj instanceof Number) subtotal = ((Number) subtotalObj).doubleValue();
+                            }
+                            dailyTable.addCell(createCell(String.format("TZS %.2f", subtotal)));
+                            
                             receiptNum++;
                         }
                     }
                 }
+            } else {
+                dailyTable.addCell(createCell("- No sales data -"));
             }
             document.add(dailyTable);
 

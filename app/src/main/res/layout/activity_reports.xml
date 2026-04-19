@@ -13,12 +13,13 @@
         android:background="@color/surface"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="12dp">
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="8dp">
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:background="@drawable/bg_round_gray"
             android:contentDescription="Back"
             android:padding="8dp"
@@ -28,44 +29,45 @@
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="4dp"
             android:layout_weight="1"
             android:text="Reports"
             android:textColor="@color/text_primary"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnExportDaily"
-            style="@style/Widget.Material3.Button.TonalButton"
+            style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="36dp"
+            android:minWidth="48dp"
             android:text="Daily"
             android:textSize="11sp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnExportMonthly"
-            style="@style/Widget.Material3.Button.TonalButton"
+            style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
+            android:layout_height="36dp"
+            android:minWidth="56dp"
             android:text="Monthly"
             android:textSize="11sp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnExportYearly"
-            style="@style/Widget.Material3.Button.TonalButton"
+            style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
+            android:layout_height="36dp"
+            android:minWidth="48dp"
             android:text="Yearly"
             android:textSize="11sp" />
 
         <ImageButton
             android:id="@+id/btnExportOptions"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="8dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="4dp"
             android:background="@drawable/bg_round_gray"
             android:contentDescription="Export Options"
             android:padding="6dp"
