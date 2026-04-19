@@ -28,6 +28,8 @@ import com.dtcteam.pypos.ui.sales.SalesActivity;
 import com.dtcteam.pypos.ui.stock.StockActivity;
 import com.dtcteam.pypos.ui.reports.ReportsActivity;
 import com.dtcteam.pypos.ui.users.UsersActivity;
+import com.dtcteam.pypos.util.NetworkMonitor;
+import com.dtcteam.pypos.util.AlertHelper;
 import com.dtcteam.pypos.ui.pos.PosFragment;
 import com.dtcteam.pypos.ui.settings.ServicesFragment;
 import com.dtcteam.pypos.ui.settings.SettingsFragment;
@@ -47,6 +49,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable poller;
     private TextView badgeCount;
+    private NetworkMonitor networkMonitor;
+    private AlertHelper alertHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +61,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         prefs = getSharedPreferences("pypos_prefs", MODE_PRIVATE);
         
         badgeCount = binding.badgeCount;
+        
+        // Setup network monitoring
+        networkMonitor = NetworkMonitor.getInstance(this);
+        alertHelper = new AlertHelper(this);
+        
+        networkMonitor.startMonitoring(new NetworkMonitor.NetworkListener() {
+            @Override
+            public void onNetworkChanged(boolean isOnline) {
+                runOnUiThread(() -> {
+                    alertHelper.showOfflineNotification(!isOnline);
+                    if (isOnline) {
+                        // Refresh data when back online
+                        updateBadge();
+                    }
+                });
+            }
+        });
+        
         startPolling();
         checkAuth();
         setupNavigation();
@@ -69,11 +91,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         updateBadge();
     }
 
-    @Override
+@Override
     protected void onDestroy() {
         super.onDestroy();
         if (poller != null) handler.removeCallbacks(poller);
-}
+        if (networkMonitor != null) networkMonitor.stopMonitoring();
+    }
     
     private void startPolling() {
         poller = new Runnable() {
