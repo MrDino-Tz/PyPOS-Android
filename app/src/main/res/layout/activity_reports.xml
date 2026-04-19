@@ -61,6 +61,17 @@
             android:text="Yearly"
             android:textSize="11sp" />
 
+        <ImageButton
+            android:id="@+id/btnExportOptions"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_round_gray"
+            android:contentDescription="Export Options"
+            android:padding="6dp"
+            android:src="@drawable/ic_download"
+            app:tint="@color/text_primary" />
+
     </LinearLayout>
 
     <com.google.android.material.tabs.TabLayout

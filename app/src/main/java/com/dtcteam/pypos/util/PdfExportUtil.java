@@ -171,21 +171,33 @@ public class PdfExportUtil {
                 .setBold()
                 .setMarginTop(20));
             
-            Table dailyTable = new Table(UnitValue.createPercentArray(new float[]{2, 2, 2, 2}));
+Table dailyTable = new Table(UnitValue.createPercentArray(new float[]{20, 25, 20, 20, 20}));
             dailyTable.setWidth(UnitValue.createPercentValue(100));
-            dailyTable.addHeaderCell(createHeaderCell("Date"));
+            dailyTable.addHeaderCell(createHeaderCell("Receipt #"));
+            dailyTable.addHeaderCell(createHeaderCell("Item Name"));
+            dailyTable.addHeaderCell(createHeaderCell("Unit Price"));
+            dailyTable.addHeaderCell(createHeaderCell("Qty"));
             dailyTable.addHeaderCell(createHeaderCell("Amount"));
-            dailyTable.addHeaderCell(createHeaderCell("Items"));
-            dailyTable.addHeaderCell(createHeaderCell("Status"));
-
+            
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> dailySales = (List<Map<String, Object>>) dailyData.get("sales");
             if (dailySales != null) {
+                int receiptNum = 1;
+                double receiptTotal = 0;
+                int itemCount = 0;
                 for (Map<String, Object> sale : dailySales) {
-                    dailyTable.addCell(createCell(String.valueOf(sale.get("date") != null ? sale.get("date") : "")));
-                    dailyTable.addCell(createCell(String.format("TZS %.2f", sale.get("amount") != null ? (Double) sale.get("amount") : 0.0)));
-                    dailyTable.addCell(createCell(String.valueOf(sale.get("items") != null ? sale.get("items") : "0")));
-                    dailyTable.addCell(createCell(String.valueOf(sale.get("status") != null ? sale.get("status") : "completed")));
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> saleItems = (List<Map<String, Object>>) sale.get("items");
+                    if (saleItems != null) {
+                        for (Map<String, Object> item : saleItems) {
+                            dailyTable.addCell(createCell(receiptNum == 1 ? "#" + String.valueOf(sale.get("id")) : ""));
+                            dailyTable.addCell(createCell(String.valueOf(item.get("name") != null ? item.get("name") : "-")));
+                            dailyTable.addCell(createCell(String.format("TZS %.2f", item.get("price") != null ? (Double) item.get("price") : 0.0)));
+                            dailyTable.addCell(createCell(String.valueOf(item.get("quantity") != null ? item.get("quantity") : "0")));
+                            dailyTable.addCell(createCell(String.format("TZS %.2f", item.get("subtotal") != null ? (Double) item.get("subtotal") : 0.0)));
+                            receiptNum++;
+                        }
+                    }
                 }
             }
             document.add(dailyTable);

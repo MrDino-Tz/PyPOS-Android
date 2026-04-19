@@ -300,7 +300,9 @@ public class ItemsActivity extends AppCompatActivity {
             categoryAdapter.add(cat.getName());
         }
         actvCategory.setAdapter(categoryAdapter);
-
+        
+        dialog.show();
+        
         if (item != null) {
             dialogBinding.tvTitle.setText("Edit Item");
             etName.setText(item.getName());
