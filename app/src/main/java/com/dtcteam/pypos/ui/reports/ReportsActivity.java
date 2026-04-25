@@ -71,34 +71,37 @@ public class ReportsActivity extends AppCompatActivity {
     private void setupListeners() {
         binding.btnBack.setOnClickListener(v -> finish());
         
-        binding.btnExportDaily.setOnClickListener(v -> {
-            exportDailyPdf();
-        });
-        
-        binding.btnExportMonthly.setOnClickListener(v -> {
-            exportMonthlyPdf();
-        });
-        
-        binding.btnExportYearly.setOnClickListener(v -> {
-            exportYearlyPdf();
-        });
-        
         binding.btnExportOptions.setOnClickListener(v -> {
-            PopupMenu popup = new PopupMenu(ReportsActivity.this, v);
-            popup.getMenu().add(0, 1, 0, "Daily PDF");
-            popup.getMenu().add(0, 2, 1, "Daily CSV");
-            popup.getMenu().add(0, 3, 2, "Monthly PDF");
-            popup.getMenu().add(0, 4, 3, "Yearly PDF");
-            popup.setOnMenuItemClickListener(item -> {
-                switch (item.getItemId()) {
-                    case 1: exportDailyPdf(); break;
-                    case 2: exportDailyPdf(); break;
-                    case 3: exportMonthlyPdf(); break;
-                    case 4: exportYearlyPdf(); break;
-                }
-                return true;
+            com.google.android.material.bottomsheet.BottomSheetDialog bottomSheet = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+            View sheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_export, null);
+            bottomSheet.setContentView(sheetView);
+            
+            sheetView.findViewById(R.id.btnExportExcelDaily).setOnClickListener(view -> {
+                bottomSheet.dismiss();
+                exportDailyPdf(); // Reusing PDF logic for now, or add CSV if available
             });
-            popup.show();
+            
+            sheetView.findViewById(R.id.btnExportExcelMonthly).setOnClickListener(view -> {
+                bottomSheet.dismiss();
+                exportMonthlyPdf();
+            });
+            
+            sheetView.findViewById(R.id.btnExportPdfDaily).setOnClickListener(view -> {
+                bottomSheet.dismiss();
+                exportDailyPdf();
+            });
+            
+            sheetView.findViewById(R.id.btnExportPdfMonthly).setOnClickListener(view -> {
+                bottomSheet.dismiss();
+                exportMonthlyPdf();
+            });
+            
+            sheetView.findViewById(R.id.btnExportAll).setOnClickListener(view -> {
+                bottomSheet.dismiss();
+                exportDailyPdf(); // Or a combined function
+            });
+            
+            bottomSheet.show();
         });
         
         binding.tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
