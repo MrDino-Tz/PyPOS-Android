@@ -46,8 +46,7 @@
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/ic_chart"
-            app:tint="@color/success" />
+            android:src="@drawable/excell"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -73,8 +72,7 @@
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/ic_archive"
-            app:tint="@color/success" />
+            android:src="@drawable/excell"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -116,8 +114,7 @@
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/ic_file"
-            app:tint="@color/danger" />
+            android:src="@drawable/pdf" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -143,8 +140,7 @@
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/ic_file"
-            app:tint="@color/danger" />
+            android:src="@drawable/pdf"/>
 
         <TextView
             android:layout_width="wrap_content"
