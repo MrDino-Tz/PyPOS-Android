@@ -328,7 +328,7 @@ public class ApiService {
     }
 
     public void getSales(Callback<List<Sale>> callback) {
-        String url = AppConfig.getSupabaseUrl() + "/rest/v1/sales?select=*,sale_items(*,items(name,cost_price,is_service))&order=created_at.desc&limit=100";
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/sales?select=*,users(full_name),sale_items(*,items(name,cost_price,is_service))&order=created_at.desc&limit=100";
         
         Request request = new Request.Builder()
             .url(url)
@@ -354,6 +354,13 @@ public class ApiService {
                             sale.setDiscountAmount(json.has("discount_amount") && !json.get("discount_amount").isJsonNull() ? json.get("discount_amount").getAsDouble() : 0.0);
                             sale.setPaymentMethod(json.has("payment_method") && !json.get("payment_method").isJsonNull() ? json.get("payment_method").getAsString() : "cash");
                             sale.setCreatedAt(json.has("created_at") && !json.get("created_at").isJsonNull() ? json.get("created_at").getAsString() : "");
+                            
+                            if (json.has("users") && !json.get("users").isJsonNull()) {
+                                JsonObject userObj = json.getAsJsonObject("users");
+                                if (userObj != null && userObj.has("full_name") && !userObj.get("full_name").isJsonNull()) {
+                                    sale.setCashierName(userObj.get("full_name").getAsString());
+                                }
+                            }
                             
                             List<SaleItem> saleItems = new ArrayList<>();
                             if (json.has("sale_items") && !json.get("sale_items").isJsonNull()) {

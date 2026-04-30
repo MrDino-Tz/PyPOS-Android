@@ -10,10 +10,13 @@ public class Sale {
     private String paymentMethod;
     private String customerName;
     private String createdAt;
+    private String cashierName;
     private List<SaleItem> saleItems;
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
+    public String getCashierName() { return cashierName; }
+    public void setCashierName(String cashierName) { this.cashierName = cashierName; }
     public double getTotalAmount() { return totalAmount; }
     public void setTotalAmount(double totalAmount) { this.totalAmount = totalAmount; }
     public double getFinalAmount() { return finalAmount; }
