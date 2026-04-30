@@ -8,6 +8,8 @@ public class SaleItem {
     private int quantity;
     private double unitPrice;
     private double subtotal;
+    private double costPrice;
+    private boolean isService;
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
@@ -23,4 +25,8 @@ public class SaleItem {
     public void setUnitPrice(double unitPrice) { this.unitPrice = unitPrice; }
     public double getSubtotal() { return subtotal; }
     public void setSubtotal(double subtotal) { this.subtotal = subtotal; }
+    public double getCostPrice() { return costPrice; }
+    public void setCostPrice(double costPrice) { this.costPrice = costPrice; }
+    public boolean isService() { return isService; }
+    public void setService(boolean service) { isService = service; }
 }

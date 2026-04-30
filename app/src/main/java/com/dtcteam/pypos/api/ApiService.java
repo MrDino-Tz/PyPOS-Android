@@ -328,7 +328,7 @@ public class ApiService {
     }
 
     public void getSales(Callback<List<Sale>> callback) {
-        String url = AppConfig.getSupabaseUrl() + "/rest/v1/sales?select=*,sale_items(*,items(name))&order=created_at.desc&limit=100";
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/sales?select=*,sale_items(*,items(name,cost_price,is_service))&order=created_at.desc&limit=100";
         
         Request request = new Request.Builder()
             .url(url)
@@ -369,8 +369,16 @@ public class ApiService {
                                     si.setSubtotal(itemJson.has("subtotal") && !itemJson.get("subtotal").isJsonNull() ? itemJson.get("subtotal").getAsDouble() : 0.0);
                                     if (itemJson.has("items") && !itemJson.get("items").isJsonNull()) {
                                         JsonObject itemObj = itemJson.getAsJsonObject("items");
-                                        if (itemObj != null && itemObj.has("name") && !itemObj.get("name").isJsonNull()) {
-                                            si.setItemName(itemObj.get("name").getAsString());
+                                        if (itemObj != null) {
+                                            if (itemObj.has("name") && !itemObj.get("name").isJsonNull()) {
+                                                si.setItemName(itemObj.get("name").getAsString());
+                                            }
+                                            if (itemObj.has("cost_price") && !itemObj.get("cost_price").isJsonNull()) {
+                                                si.setCostPrice(itemObj.get("cost_price").getAsDouble());
+                                            }
+                                            if (itemObj.has("is_service") && !itemObj.get("is_service").isJsonNull()) {
+                                                si.setService(itemObj.get("is_service").getAsBoolean());
+                                            }
                                         }
                                     }
                                     saleItems.add(si);

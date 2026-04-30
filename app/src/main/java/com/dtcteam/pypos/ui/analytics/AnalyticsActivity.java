@@ -4,7 +4,13 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.TableLayout;
+import android.widget.TableRow;
+import android.widget.TextView;
 import android.widget.Toast;
+import android.view.Gravity;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.dtcteam.pypos.R;
@@ -165,6 +171,9 @@ public class AnalyticsActivity extends AppCompatActivity {
     }
 
     private void processData(List<Item> items, List<Category> categories, List<Sale> sales) {
+        // Process Profit Table
+        processProfitTable(sales);
+
         // Process Revenue Trend (Last 7 days)
         processRevenueChart(sales);
 
@@ -178,17 +187,136 @@ public class AnalyticsActivity extends AppCompatActivity {
         processCategoryChart(items, categories);
     }
 
+    private void processProfitTable(List<Sale> sales) {
+        TableLayout table = binding.profitTable;
+        table.removeAllViews();
+
+        TableRow headerRow = new TableRow(this);
+        headerRow.setBackgroundColor(Color.parseColor("#F8F9FA"));
+        headerRow.setPadding(0, 16, 0, 16);
+        
+        String[] headers = {"Product/Service", "Qty", "Revenue", "Cost", "Profit", "Margin"};
+        for (String h : headers) {
+            TextView tv = new TextView(this);
+            tv.setText(h);
+            tv.setTypeface(null, Typeface.BOLD);
+            tv.setPadding(16, 8, 16, 8);
+            tv.setTextColor(Color.parseColor("#495057"));
+            headerRow.addView(tv);
+        }
+        table.addView(headerRow);
+
+        Map<String, double[]> itemData = new HashMap<>();
+        for (Sale sale : sales) {
+            if (sale.getSaleItems() != null) {
+                for (com.dtcteam.pypos.model.SaleItem si : sale.getSaleItems()) {
+                    String name = si.getItemName() != null ? si.getItemName() : "Item " + si.getItemId();
+                    double[] data = itemData.getOrDefault(name, new double[]{0, 0, 0});
+                    data[0] += si.getQuantity();
+                    data[1] += si.getQuantity() * si.getUnitPrice();
+                    data[2] += si.getQuantity() * si.getCostPrice();
+                    itemData.put(name, data);
+                }
+            }
+        }
+
+        List<Map.Entry<String, double[]>> sorted = new ArrayList<>(itemData.entrySet());
+        sorted.sort((a, b) -> Double.compare(b.getValue()[1] - b.getValue()[2], a.getValue()[1] - a.getValue()[2]));
+
+        if (sorted.isEmpty()) {
+            TableRow emptyRow = new TableRow(this);
+            TextView emptyTv = new TextView(this);
+            emptyTv.setText("No profitability data available");
+            emptyTv.setPadding(16, 32, 16, 32);
+            emptyTv.setGravity(Gravity.CENTER);
+            TableRow.LayoutParams params = new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, TableRow.LayoutParams.WRAP_CONTENT);
+            params.span = 6;
+            emptyTv.setLayoutParams(params);
+            emptyRow.addView(emptyTv);
+            table.addView(emptyRow);
+            return;
+        }
+
+        for (Map.Entry<String, double[]> entry : sorted) {
+            TableRow row = new TableRow(this);
+            row.setPadding(0, 16, 0, 16);
+            
+            double qty = entry.getValue()[0];
+            double revenue = entry.getValue()[1];
+            double cost = entry.getValue()[2];
+            double profit = revenue - cost;
+            double margin = revenue > 0 ? (profit / revenue) * 100 : 0;
+
+            TextView tvName = new TextView(this);
+            tvName.setText(entry.getKey());
+            tvName.setPadding(16, 8, 16, 8);
+            row.addView(tvName);
+
+            TextView tvQty = new TextView(this);
+            tvQty.setText(String.valueOf((int)qty));
+            tvQty.setPadding(16, 8, 16, 8);
+            row.addView(tvQty);
+
+            TextView tvRev = new TextView(this);
+            tvRev.setText(nf.format(revenue));
+            tvRev.setTextColor(Color.parseColor("#E66239"));
+            tvRev.setPadding(16, 8, 16, 8);
+            row.addView(tvRev);
+
+            TextView tvCost = new TextView(this);
+            tvCost.setText(nf.format(cost));
+            tvCost.setTextColor(Color.parseColor("#FB2C36"));
+            tvCost.setPadding(16, 8, 16, 8);
+            row.addView(tvCost);
+
+            TextView tvProfit = new TextView(this);
+            tvProfit.setText(nf.format(profit));
+            tvProfit.setTextColor(Color.parseColor("#00C951"));
+            tvProfit.setTypeface(null, Typeface.BOLD);
+            tvProfit.setPadding(16, 8, 16, 8);
+            row.addView(tvProfit);
+
+            TextView tvMargin = new TextView(this);
+            tvMargin.setText(String.format(usLocale, "%.1f%%", margin));
+            tvMargin.setPadding(24, 8, 24, 8);
+            tvMargin.setTextColor(Color.WHITE);
+            tvMargin.setTextSize(12f);
+            tvMargin.setGravity(Gravity.CENTER);
+
+            GradientDrawable badge = new GradientDrawable();
+            badge.setCornerRadius(16f);
+            if (margin >= 50) badge.setColor(Color.parseColor("#00C951"));
+            else if (margin >= 20) badge.setColor(Color.parseColor("#F0B100"));
+            else badge.setColor(Color.parseColor("#FB2C36"));
+            tvMargin.setBackground(badge);
+
+            TableRow.LayoutParams marginParams = new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT);
+            marginParams.setMargins(16, 8, 16, 8);
+            tvMargin.setLayoutParams(marginParams);
+
+            row.addView(tvMargin);
+            table.addView(row);
+
+            View divider = new View(this);
+            divider.setBackgroundColor(Color.parseColor("#E5E5E5"));
+            table.addView(divider, new TableLayout.LayoutParams(TableLayout.LayoutParams.MATCH_PARENT, 1));
+        }
+    }
+
     private void processRevenueChart(List<Sale> sales) {
-        List<Entry> entries = new ArrayList<>();
+        List<Entry> revEntries = new ArrayList<>();
+        List<Entry> profitEntries = new ArrayList<>();
         Calendar cal = Calendar.getInstance();
-        Map<String, Float> dailySales = new HashMap<>();
+        Map<String, Float> dailyRevenue = new java.util.LinkedHashMap<>();
+        Map<String, Float> dailyProfit = new java.util.LinkedHashMap<>();
 
         // Get last 7 days
         for (int i = 6; i >= 0; i--) {
             cal.setTime(new java.util.Date());
             cal.add(Calendar.DAY_OF_YEAR, -i);
             String dateKey = String.format("%02d/%02d", cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
-            dailySales.put(dateKey, 0f);
+            dailyRevenue.put(dateKey, 0f);
+            dailyProfit.put(dateKey, 0f);
         }
 
         // Sum sales by day
@@ -200,55 +328,72 @@ public class AnalyticsActivity extends AppCompatActivity {
                     if (date != null) {
                         cal.setTime(date);
                         String dateKey = String.format("%02d/%02d", cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
-                        if (dailySales.containsKey(dateKey)) {
-                            dailySales.put(dateKey, dailySales.get(dateKey) + (float) sale.getFinalAmount());
+                        if (dailyRevenue.containsKey(dateKey)) {
+                            dailyRevenue.put(dateKey, dailyRevenue.get(dateKey) + (float) sale.getFinalAmount());
+                            float saleProfit = 0;
+                            if (sale.getSaleItems() != null) {
+                                for (com.dtcteam.pypos.model.SaleItem si : sale.getSaleItems()) {
+                                    saleProfit += (si.getUnitPrice() - si.getCostPrice()) * si.getQuantity();
+                                }
+                            }
+                            dailyProfit.put(dateKey, dailyProfit.get(dateKey) + saleProfit);
                         }
                     }
-                } catch (Exception e) {
-                    // Skip invalid dates
-                }
+                } catch (Exception e) {}
             }
         }
 
         int index = 0;
-        for (Map.Entry<String, Float> entry : dailySales.entrySet()) {
-            entries.add(new Entry(index, entry.getValue()));
+        for (Map.Entry<String, Float> entry : dailyRevenue.entrySet()) {
+            revEntries.add(new Entry(index, entry.getValue()));
+            profitEntries.add(new Entry(index, dailyProfit.get(entry.getKey())));
             index++;
         }
 
-        LineDataSet dataSet = new LineDataSet(entries, "Revenue");
-        dataSet.setColor(Color.parseColor("#E66239"));
-        dataSet.setCircleColor(Color.parseColor("#E66239"));
-        dataSet.setLineWidth(2f);
-        dataSet.setCircleRadius(4f);
-        dataSet.setDrawFilled(true);
-        dataSet.setFillColor(Color.parseColor("#33E66239"));
-        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-        dataSet.setDrawValues(false);
+        LineDataSet revDataSet = new LineDataSet(revEntries, "Revenue");
+        revDataSet.setColor(Color.parseColor("#E66239"));
+        revDataSet.setCircleColor(Color.parseColor("#E66239"));
+        revDataSet.setLineWidth(2f);
+        revDataSet.setCircleRadius(4f);
+        revDataSet.setDrawFilled(true);
+        revDataSet.setFillColor(Color.parseColor("#33E66239"));
+        revDataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        revDataSet.setDrawValues(false);
 
-        LineData lineData = new LineData(dataSet);
+        LineDataSet profitDataSet = new LineDataSet(profitEntries, "Profit");
+        profitDataSet.setColor(Color.parseColor("#00C951"));
+        profitDataSet.setCircleColor(Color.parseColor("#00C951"));
+        profitDataSet.setLineWidth(2f);
+        profitDataSet.setCircleRadius(4f);
+        profitDataSet.setDrawFilled(true);
+        profitDataSet.setFillColor(Color.parseColor("#3300C951"));
+        profitDataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        profitDataSet.setDrawValues(false);
+
+        LineData lineData = new LineData(revDataSet, profitDataSet);
         binding.revenueChart.setData(lineData);
+        binding.revenueChart.getLegend().setEnabled(true);
         
-        String[] labels = dailySales.keySet().toArray(new String[0]);
+        String[] labels = dailyRevenue.keySet().toArray(new String[0]);
         binding.revenueChart.getXAxis().setValueFormatter(new IndexAxisValueFormatter(labels));
         binding.revenueChart.getXAxis().setGranularity(1f);
         binding.revenueChart.invalidate();
     }
 
     private void processTopItemsChart(List<Sale> sales) {
-        Map<String, Float> itemTotals = new HashMap<>();
+        Map<String, Float> itemProfits = new HashMap<>();
         
         for (Sale sale : sales) {
             if (sale.getSaleItems() != null) {
                 for (com.dtcteam.pypos.model.SaleItem saleItem : sale.getSaleItems()) {
                     String name = saleItem.getItemName() != null ? saleItem.getItemName() : "Item " + saleItem.getItemId();
-                    itemTotals.put(name, itemTotals.getOrDefault(name, 0f) + saleItem.getQuantity());
+                    float profit = (float) ((saleItem.getUnitPrice() - saleItem.getCostPrice()) * saleItem.getQuantity());
+                    itemProfits.put(name, itemProfits.getOrDefault(name, 0f) + profit);
                 }
             }
         }
 
-        // Sort and get top 5
-        List<Map.Entry<String, Float>> sorted = new ArrayList<>(itemTotals.entrySet());
+        List<Map.Entry<String, Float>> sorted = new ArrayList<>(itemProfits.entrySet());
         sorted.sort((a, b) -> b.getValue().compareTo(a.getValue()));
         sorted = sorted.subList(0, Math.min(5, sorted.size()));
 
@@ -261,8 +406,8 @@ public class AnalyticsActivity extends AppCompatActivity {
             labels.add(name.length() > 10 ? name.substring(0, 10) + ".." : name);
         }
 
-        BarDataSet dataSet = new BarDataSet(entries, "Quantity");
-        dataSet.setColor(Color.parseColor("#E66239"));
+        BarDataSet dataSet = new BarDataSet(entries, "Profit");
+        dataSet.setColor(Color.parseColor("#00C951"));
         dataSet.setValueTextSize(10f);
         
         BarData barData = new BarData(dataSet);
