@@ -122,7 +122,7 @@ addLogosWithTitle(document, context, "Pawin Stationery - Categories");
         }
     }
 
-    public static void exportReports(Context context, Map<String, Object> dailyData, Map<String, Object> monthlyData, double totalRevenue, int totalTransactions) {
+    public static void exportReports(Context context, Map<String, Object> dailyData, Map<String, Object> monthlyData, double totalRevenue, double totalProfit, int totalTransactions) {
         try {
             String fileName = "Pawin_Stationery_Report_" + System.currentTimeMillis() + ".pdf";
             File file = getOutputFile(context, fileName);
@@ -144,8 +144,13 @@ addLogosWithTitle(document, context, "Pawin Stationery Report");
             
             summaryTable.addCell(createLabelCell("Total Revenue:"));
             summaryTable.addCell(createCell(String.format("TZS %.2f", totalRevenue)));
+            summaryTable.addCell(createLabelCell("Total Profit:"));
+            summaryTable.addCell(createCell(String.format("TZS %.2f", totalProfit)));
             summaryTable.addCell(createLabelCell("Total Transactions:"));
             summaryTable.addCell(createCell(String.valueOf(totalTransactions)));
+            summaryTable.addCell(createLabelCell("Margin:"));
+            double margin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+            summaryTable.addCell(createCell(String.format("%.1f%%", margin)));
             
             document.add(summaryTable);
             
@@ -154,13 +159,16 @@ addLogosWithTitle(document, context, "Pawin Stationery Report");
                 .setBold()
                 .setMarginTop(20));
             
-Table dailyTable = new Table(UnitValue.createPercentArray(new float[]{20, 25, 20, 20, 20}));
+            Table dailyTable = new Table(UnitValue.createPercentArray(new float[]{12, 20, 8, 12, 12, 12, 12, 12}));
             dailyTable.setWidth(UnitValue.createPercentValue(100));
-            dailyTable.addHeaderCell(createHeaderCell("Receipt #"));
+            dailyTable.addHeaderCell(createHeaderCell("Receipt"));
             dailyTable.addHeaderCell(createHeaderCell("Item Name"));
-            dailyTable.addHeaderCell(createHeaderCell("Unit Price"));
             dailyTable.addHeaderCell(createHeaderCell("Qty"));
+            dailyTable.addHeaderCell(createHeaderCell("Price"));
             dailyTable.addHeaderCell(createHeaderCell("Amount"));
+            dailyTable.addHeaderCell(createHeaderCell("Cost"));
+            dailyTable.addHeaderCell(createHeaderCell("T.Cost"));
+            dailyTable.addHeaderCell(createHeaderCell("Profit"));
             
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> dailySales = (List<Map<String, Object>>) dailyData.get("sales");
@@ -174,15 +182,6 @@ Table dailyTable = new Table(UnitValue.createPercentArray(new float[]{20, 25, 20
                             dailyTable.addCell(createCell(receiptNum == 1 ? "#" + String.valueOf(sale.get("id")) : ""));
                             dailyTable.addCell(createCell(String.valueOf(item.get("name") != null ? item.get("name") : "-")));
                             
-                            Object priceObj = item.get("price");
-                            double price = 0.0;
-                            if (priceObj != null) {
-                                if (priceObj instanceof Double) price = (Double) priceObj;
-                                else if (priceObj instanceof Integer) price = ((Integer) priceObj).doubleValue();
-                                else if (priceObj instanceof Number) price = ((Number) priceObj).doubleValue();
-                            }
-                            dailyTable.addCell(createCell(String.format("TZS %.2f", price)));
-                            
                             Object qtyObj = item.get("quantity");
                             int qty = 0;
                             if (qtyObj != null) {
@@ -191,6 +190,15 @@ Table dailyTable = new Table(UnitValue.createPercentArray(new float[]{20, 25, 20
                             }
                             dailyTable.addCell(createCell(String.valueOf(qty)));
                             
+                            Object priceObj = item.get("price");
+                            double price = 0.0;
+                            if (priceObj != null) {
+                                if (priceObj instanceof Double) price = (Double) priceObj;
+                                else if (priceObj instanceof Integer) price = ((Integer) priceObj).doubleValue();
+                                else if (priceObj instanceof Number) price = ((Number) priceObj).doubleValue();
+                            }
+                            dailyTable.addCell(createCell(String.format("%.2f", price)));
+                            
                             Object subtotalObj = item.get("subtotal");
                             double subtotal = 0.0;
                             if (subtotalObj != null) {
@@ -198,7 +206,22 @@ Table dailyTable = new Table(UnitValue.createPercentArray(new float[]{20, 25, 20
                                 else if (subtotalObj instanceof Integer) subtotal = ((Integer) subtotalObj).doubleValue();
                                 else if (subtotalObj instanceof Number) subtotal = ((Number) subtotalObj).doubleValue();
                             }
-                            dailyTable.addCell(createCell(String.format("TZS %.2f", subtotal)));
+                            dailyTable.addCell(createCell(String.format("%.2f", subtotal)));
+
+                            Object costObj = item.get("cost");
+                            double cost = 0.0;
+                            if (costObj != null) {
+                                if (costObj instanceof Double) cost = (Double) costObj;
+                                else if (costObj instanceof Integer) cost = ((Integer) costObj).doubleValue();
+                                else if (costObj instanceof Number) cost = ((Number) costObj).doubleValue();
+                            }
+                            dailyTable.addCell(createCell(String.format("%.2f", cost)));
+                            
+                            double tCost = cost * qty;
+                            dailyTable.addCell(createCell(String.format("%.2f", tCost)));
+
+                            double profit = subtotal - tCost;
+                            dailyTable.addCell(createCell(String.format("%.2f", profit)));
                             
                             receiptNum++;
                         }

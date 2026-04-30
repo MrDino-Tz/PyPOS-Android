@@ -184,12 +184,18 @@ public class ReportsActivity extends AppCompatActivity {
         
         String today = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new java.util.Date()) + "T";
         double dailyTotal = 0;
+        double dailyProfit = 0;
         List<Sale> dailySales = new ArrayList<>();
         
         for (Sale sale : sales) {
             if (sale.getCreatedAt() != null && sale.getCreatedAt().startsWith(today)) {
                 dailySales.add(sale);
                 dailyTotal += sale.getFinalAmount();
+                if (sale.getSaleItems() != null) {
+                    for (SaleItem si : sale.getSaleItems()) {
+                        dailyProfit += (si.getUnitPrice() - si.getCostPrice()) * si.getQuantity();
+                    }
+                }
             }
         }
         
@@ -216,6 +222,7 @@ public class ReportsActivity extends AppCompatActivity {
                     itemMap.put("price", si.getUnitPrice());
                     itemMap.put("quantity", si.getQuantity());
                     itemMap.put("subtotal", si.getSubtotal());
+                    itemMap.put("cost", si.getCostPrice());
                     itemList.add(itemMap);
                 }
             }
@@ -224,7 +231,7 @@ public class ReportsActivity extends AppCompatActivity {
         }
         dailyData.put("sales", salesList);
         
-        PdfExportUtil.exportReports(this, dailyData, new HashMap<>(), dailyTotal, dailySales.size());
+        PdfExportUtil.exportReports(this, dailyData, new HashMap<>(), dailyTotal, dailyProfit, dailySales.size());
     }
 
     private void exportMonthlyPdf() {
@@ -235,12 +242,18 @@ public class ReportsActivity extends AppCompatActivity {
         
         String thisMonth = new java.text.SimpleDateFormat("yyyy-MM", Locale.US).format(new java.util.Date());
         double monthlyTotal = 0;
+        double monthlyProfit = 0;
         List<Sale> monthlySales = new ArrayList<>();
         
         for (Sale sale : sales) {
             if (sale.getCreatedAt() != null && sale.getCreatedAt().startsWith(thisMonth)) {
                 monthlySales.add(sale);
                 monthlyTotal += sale.getFinalAmount();
+                if (sale.getSaleItems() != null) {
+                    for (SaleItem si : sale.getSaleItems()) {
+                        monthlyProfit += (si.getUnitPrice() - si.getCostPrice()) * si.getQuantity();
+                    }
+                }
             }
         }
         
@@ -267,6 +280,7 @@ public class ReportsActivity extends AppCompatActivity {
                     itemMap.put("price", si.getUnitPrice());
                     itemMap.put("quantity", si.getQuantity());
                     itemMap.put("subtotal", si.getSubtotal());
+                    itemMap.put("cost", si.getCostPrice());
                     itemList.add(itemMap);
                 }
             }
@@ -275,7 +289,7 @@ public class ReportsActivity extends AppCompatActivity {
         }
         monthlyData.put("sales", salesList);
         
-        PdfExportUtil.exportReports(this, new HashMap<>(), monthlyData, monthlyTotal, monthlySales.size());
+        PdfExportUtil.exportReports(this, new HashMap<>(), monthlyData, monthlyTotal, monthlyProfit, monthlySales.size());
     }
 
     private void exportYearlyPdf() {
@@ -286,12 +300,18 @@ public class ReportsActivity extends AppCompatActivity {
         
         String thisYear = new java.text.SimpleDateFormat("yyyy", Locale.US).format(new java.util.Date());
         double yearlyTotal = 0;
+        double yearlyProfit = 0;
         List<Sale> yearlySales = new ArrayList<>();
         
         for (Sale sale : sales) {
             if (sale.getCreatedAt() != null && sale.getCreatedAt().startsWith(thisYear)) {
                 yearlySales.add(sale);
                 yearlyTotal += sale.getFinalAmount();
+                if (sale.getSaleItems() != null) {
+                    for (SaleItem si : sale.getSaleItems()) {
+                        yearlyProfit += (si.getUnitPrice() - si.getCostPrice()) * si.getQuantity();
+                    }
+                }
             }
         }
         
@@ -318,6 +338,7 @@ public class ReportsActivity extends AppCompatActivity {
                     itemMap.put("price", si.getUnitPrice());
                     itemMap.put("quantity", si.getQuantity());
                     itemMap.put("subtotal", si.getSubtotal());
+                    itemMap.put("cost", si.getCostPrice());
                     itemList.add(itemMap);
                 }
             }
@@ -326,7 +347,7 @@ public class ReportsActivity extends AppCompatActivity {
         }
         yearlyData.put("sales", salesList);
         
-        PdfExportUtil.exportReports(this, yearlyData, new HashMap<>(), yearlyTotal, yearlySales.size());
+        PdfExportUtil.exportReports(this, yearlyData, new HashMap<>(), yearlyTotal, yearlyProfit, yearlySales.size());
     }
 
     private void loadSales() {
