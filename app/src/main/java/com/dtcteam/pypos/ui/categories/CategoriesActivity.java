@@ -192,6 +192,7 @@ public class CategoriesActivity extends AppCompatActivity {
                 if (result != null) {
                     categories.addAll(result);
                 }
+                binding.tvTotalCount.setText("(" + categories.size() + " categories)");
                 String search = binding.etSearch.getText() != null ? binding.etSearch.getText().toString() : "";
                 if (!search.isEmpty()) {
                     filterCategories(search);

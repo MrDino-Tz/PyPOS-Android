@@ -147,7 +147,7 @@ public class ItemsActivity extends AppCompatActivity {
         });
         
         binding.btnExportPdf.setOnClickListener(v -> {
-            exportItemsPdf();
+            showExportOptionsSheet();
         });
         
         binding.btnAdd.setOnClickListener(v -> showItemDialog(null));
@@ -231,6 +231,11 @@ public class ItemsActivity extends AppCompatActivity {
                         }
                     }
                 }
+                // Update header with total non-service items count
+                int itemCount = items.size();
+                binding.tvItemCount.setText("Items");
+                binding.tvTotalCount.setText("(" + itemCount + " items)");
+                
                 String search = binding.etSearch.getText() != null ? binding.etSearch.getText().toString() : "";
                 String category = binding.actvCategory.getText() != null ? binding.actvCategory.getText().toString() : "";
                 if (!search.isEmpty() || !category.isEmpty()) {
@@ -544,6 +549,39 @@ public class ItemsActivity extends AppCompatActivity {
         }
         
         PdfExportUtil.exportItems(this, exportData);
+    }
+    
+    private void showExportOptionsSheet() {
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheet = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        View sheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_export, null);
+        bottomSheet.setContentView(sheetView);
+        
+        sheetView.findViewById(R.id.btnExportExcelDaily).setOnClickListener(view -> {
+            bottomSheet.dismiss();
+            exportItems();
+        });
+        
+        sheetView.findViewById(R.id.btnExportExcelMonthly).setOnClickListener(view -> {
+            bottomSheet.dismiss();
+            exportItems();
+        });
+        
+        sheetView.findViewById(R.id.btnExportPdfDaily).setOnClickListener(view -> {
+            bottomSheet.dismiss();
+            exportItemsPdf();
+        });
+        
+        sheetView.findViewById(R.id.btnExportPdfMonthly).setOnClickListener(view -> {
+            bottomSheet.dismiss();
+            exportItemsPdf();
+        });
+        
+        sheetView.findViewById(R.id.btnExportAll).setOnClickListener(view -> {
+            bottomSheet.dismiss();
+            exportItems();
+        });
+        
+        bottomSheet.show();
     }
 
     private void downloadTemplate() {
