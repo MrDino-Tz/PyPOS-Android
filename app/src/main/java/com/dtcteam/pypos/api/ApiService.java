@@ -1185,4 +1185,128 @@ public void deleteItem(int itemId, Callback<Void> callback) {
             }
         });
     }
+    public void getDebts(Callback<List<Debt>> callback) {
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/debts?select=*&order=created_at.desc";
+        
+        Request request = new Request.Builder()
+            .url(url)
+            .addHeader("apikey", AppConfig.getSupabaseKey())
+            .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+            .get()
+            .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    String responseBody = response.body().string();
+                    if (response.isSuccessful()) {
+                        JsonArray array = gson.fromJson(responseBody, JsonArray.class);
+                        List<Debt> debts = new ArrayList<>();
+                        for (int i = 0; i < array.size(); i++) {
+                            JsonObject json = array.get(i).getAsJsonObject();
+                            Debt debt = new Debt();
+                            debt.setId(json.get("id").getAsInt());
+                            if (json.has("sale_id") && !json.get("sale_id").isJsonNull()) debt.setSaleId(json.get("sale_id").getAsInt());
+                            debt.setPersonName(json.get("person_name").getAsString());
+                            debt.setPhoneNumber(json.has("phone_number") && !json.get("phone_number").isJsonNull() ? json.get("phone_number").getAsString() : "");
+                            debt.setDescription(json.has("description") && !json.get("description").isJsonNull() ? json.get("description").getAsString() : "");
+                            debt.setAmount(json.get("amount").getAsDouble());
+                            debt.setRemainingAmount(json.get("remaining_amount").getAsDouble());
+                            debt.setStatus(json.get("status").getAsString());
+                            debt.setType(json.get("type").getAsString());
+                            debt.setDueDate(json.has("due_date") && !json.get("due_date").isJsonNull() ? json.get("due_date").getAsString() : null);
+                            debt.setCreatedAt(json.get("created_at").getAsString());
+                            debts.add(debt);
+                        }
+                        mainHandler.post(() -> callback.onSuccess(debts));
+                    } else {
+                        mainHandler.post(() -> callback.onError("Failed to load debts"));
+                    }
+                } catch (Exception e) {
+                    mainHandler.post(() -> callback.onError(e.getMessage()));
+                }
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
+    public void createDebt(Debt debt, Callback<Debt> callback) {
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/debts";
+        
+        JsonObject body = new JsonObject();
+        if (debt.getSaleId() != null) body.addProperty("sale_id", debt.getSaleId());
+        body.addProperty("person_name", debt.getPersonName());
+        body.addProperty("phone_number", debt.getPhoneNumber());
+        body.addProperty("description", debt.getDescription());
+        body.addProperty("amount", debt.getAmount());
+        body.addProperty("remaining_amount", debt.getRemainingAmount());
+        body.addProperty("status", debt.getStatus());
+        body.addProperty("type", debt.getType());
+        if (debt.getDueDate() != null) body.addProperty("due_date", debt.getDueDate());
+
+        Request request = new Request.Builder()
+            .url(url)
+            .addHeader("apikey", AppConfig.getSupabaseKey())
+            .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+            .addHeader("Prefer", "return=representation")
+            .post(RequestBody.create(body.toString(), SupabaseClient.JSON))
+            .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    String responseBody = response.body().string();
+                    if (response.isSuccessful()) {
+                        JsonArray array = gson.fromJson(responseBody, JsonArray.class);
+                        JsonObject json = array.get(0).getAsJsonObject();
+                        Debt d = new Debt();
+                        d.setId(json.get("id").getAsInt());
+                        mainHandler.post(() -> callback.onSuccess(d));
+                    } else {
+                        mainHandler.post(() -> callback.onError("Failed to create debt"));
+                    }
+                } catch (Exception e) {
+                    mainHandler.post(() -> callback.onError(e.getMessage()));
+                }
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
+    public void updateDebt(int debtId, JsonObject updates, Callback<Void> callback) {
+        String url = AppConfig.getSupabaseUrl() + "/rest/v1/debts?id=eq." + debtId;
+        
+        Request request = new Request.Builder()
+            .url(url)
+            .addHeader("apikey", AppConfig.getSupabaseKey())
+            .addHeader("Authorization", "Bearer " + supabase.getAccessToken())
+            .patch(RequestBody.create(updates.toString(), SupabaseClient.JSON))
+            .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    mainHandler.post(() -> callback.onSuccess(null));
+                } else {
+                    mainHandler.post(() -> callback.onError("Failed to update debt"));
+                }
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
 }

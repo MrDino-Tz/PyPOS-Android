@@ -259,6 +259,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else if (itemId == R.id.nav_reports) {
             Intent intent = new Intent(this, ReportsActivity.class);
             startActivity(intent);
+        } else if (itemId == R.id.nav_debts) {
+            fragment = new com.dtcteam.pypos.ui.debts.DebtsFragment();
         } else if (itemId == R.id.nav_analytics) {
             Intent intent = new Intent(this, com.dtcteam.pypos.ui.analytics.AnalyticsActivity.class);
             startActivity(intent);

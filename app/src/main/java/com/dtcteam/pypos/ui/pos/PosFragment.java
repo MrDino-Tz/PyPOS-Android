@@ -97,15 +97,24 @@ public class PosFragment extends Fragment {
             double change = payment - total;
             binding.tvChange.setText("TSH " + nf.format((long) change));
             binding.btnCheckout.setEnabled(true);
-        } else if (payment > 0 && payment < total && total > 0) {
+            binding.btnCheckout.setText("Complete Sale");
+            binding.tvPaymentMode.setText("Payment Mode: CASH");
+            binding.tvPaymentMode.setVisibility(View.VISIBLE);
+            binding.tvPaymentMode.setTextColor(ContextCompat.getColor(requireContext(), R.color.success));
+        } else if (payment >= 0 && payment < total && total > 0) {
             binding.changeLayout.setVisibility(View.GONE);
             binding.remainingLayout.setVisibility(View.VISIBLE);
             double remaining = total - payment;
             binding.tvRemaining.setText("Remaining: TSH " + nf.format((long) remaining));
-            binding.btnCheckout.setEnabled(false);
+            binding.btnCheckout.setEnabled(true);
+            binding.btnCheckout.setText("Record as Debt");
+            binding.tvPaymentMode.setText("Payment Mode: DEBT");
+            binding.tvPaymentMode.setVisibility(View.VISIBLE);
+            binding.tvPaymentMode.setTextColor(ContextCompat.getColor(requireContext(), R.color.warning));
         } else {
             binding.changeLayout.setVisibility(View.GONE);
             binding.remainingLayout.setVisibility(View.GONE);
+            binding.tvPaymentMode.setVisibility(View.GONE);
             binding.btnCheckout.setEnabled(!cart.isEmpty());
         }
     }
@@ -446,6 +455,8 @@ return card;
         
         binding.tvTotal.setText("TSH " + nf.format((long) subtotal));
         binding.tvSubtotal.setText("TSH " + nf.format((long) subtotal));
+        binding.tvTotalItems.setText(String.valueOf(count));
+        binding.tvCartHeader.setText("Cart (" + count + ")");
         
         // Show/hide FAB based on cart
         if (cart.isEmpty()) {
@@ -473,41 +484,45 @@ return card;
     }
 
     private void processCheckout() {
-        android.util.Log.d("PyPOS", "processCheckout called. Cart size: " + cart.size());
-        android.util.Log.d("PyPOS", "Cart items: " + cart.toString());
-        
         if (cart.isEmpty()) {
-            Snackbar.make(binding.getRoot(), "Cart is empty! Add items first.", Snackbar.LENGTH_LONG)
-                .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.warning))
-                .setTextColor(ContextCompat.getColor(requireContext(), R.color.gray_900))
-                .show();
+            Snackbar.make(binding.getRoot(), "Cart is empty!", Snackbar.LENGTH_SHORT).show();
             return;
         }
-        
+
         double total = getTotal();
-        android.util.Log.d("PyPOS", "Total: " + total);
-        
         String paymentStr = binding.etPayment.getText() != null ? binding.etPayment.getText().toString() : "0";
         double payment = paymentStr.isEmpty() ? 0 : Double.parseDouble(paymentStr);
-        
-        android.util.Log.d("PyPOS", "Payment: " + payment);
-        
+
         if (payment < total) {
-            Snackbar.make(binding.getRoot(), "Insufficient payment. Total: TSH " + (long) total, Snackbar.LENGTH_LONG)
-                .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.danger))
-                .setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
-                .show();
-            return;
+            showDebtDialog(total, payment);
+        } else {
+            processSale("cash", 0, null, null);
         }
-        
-        Snackbar.make(binding.getRoot(), "Processing sale...", Snackbar.LENGTH_SHORT)
-            .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.info))
-            .setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
-            .show();
-        processSale();
     }
 
-    private void processSale() {
+    private void showDebtDialog(double total, double paid) {
+        View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_debt_details, null);
+        TextInputEditText etName = view.findViewById(R.id.etCustomerName);
+        TextInputEditText etPhone = view.findViewById(R.id.etCustomerPhone);
+
+        new MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Record Debt")
+            .setMessage("Amount: TSH " + (long) total + "\nPaid: TSH " + (long) paid + "\nRemaining: TSH " + (long) (total - paid))
+            .setView(view)
+            .setPositiveButton("Confirm", (dialog, which) -> {
+                String name = etName.getText() != null ? etName.getText().toString() : "";
+                String phone = etPhone.getText() != null ? etPhone.getText().toString() : "";
+                if (name.isEmpty()) {
+                    Toast.makeText(requireContext(), "Customer name is required", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                processSale("debt", paid, name, phone);
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    private void processSale(String method, double amountPaid, String customerName, String customerPhone) {
         binding.loadingIndicator.setVisibility(View.VISIBLE);
         
         List<Map<String, Object>> saleItems = new ArrayList<>();
@@ -519,25 +534,45 @@ return card;
             saleItems.add(saleItem);
         }
         
-        api.createSale(saleItems, "cash", 0.0, null, new ApiService.Callback<com.dtcteam.pypos.model.Sale>() {
+        api.createSale(saleItems, method, 0.0, customerName, new ApiService.Callback<com.dtcteam.pypos.model.Sale>() {
             @Override
             public void onSuccess(com.dtcteam.pypos.model.Sale result) {
-                Snackbar.make(binding.getRoot(), "Sale completed!", Snackbar.LENGTH_SHORT)
-                    .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.success))
-                    .setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
-                    .show();
+                if ("debt".equals(method)) {
+                    com.dtcteam.pypos.model.Debt debt = new com.dtcteam.pypos.model.Debt();
+                    debt.setSaleId(result.getId());
+                    debt.setPersonName(customerName);
+                    debt.setPhoneNumber(customerPhone);
+                    debt.setAmount(getTotal());
+                    debt.setRemainingAmount(getTotal() - amountPaid);
+                    debt.setStatus(amountPaid > 0 ? "partially_paid" : "pending");
+                    debt.setType("receivable");
+                    
+                    api.createDebt(debt, new ApiService.Callback<com.dtcteam.pypos.model.Debt>() {
+                        @Override
+                        public void onSuccess(com.dtcteam.pypos.model.Debt d) {
+                            finishSale();
+                        }
+                        @Override
+                        public void onError(String error) {
+                            finishSale(); // Sale was created anyway
+                        }
+                    });
+                } else {
+                    finishSale();
+                }
+            }
+
+            private void finishSale() {
+                binding.loadingIndicator.setVisibility(View.GONE);
+                Snackbar.make(binding.getRoot(), "Sale completed!", Snackbar.LENGTH_SHORT).show();
                 clearCart();
                 loadData();
-                binding.loadingIndicator.setVisibility(View.GONE);
             }
 
             @Override
             public void onError(String error) {
-                Snackbar.make(binding.getRoot(), "Error: " + error, Snackbar.LENGTH_LONG)
-                    .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.danger))
-                    .setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
-                    .show();
                 binding.loadingIndicator.setVisibility(View.GONE);
+                Toast.makeText(requireContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
             }
         });
     }

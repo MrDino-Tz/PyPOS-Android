@@ -23,6 +23,10 @@
             android:icon="@drawable/ic_chart"
             android:title="Reports" />
         <item
+            android:id="@+id/nav_debts"
+            android:icon="@drawable/ic_receipt"
+            android:title="Debt Records" />
+        <item
             android:id="@+id/nav_users"
             android:icon="@drawable/ic_user"
             android:title="Users" />
