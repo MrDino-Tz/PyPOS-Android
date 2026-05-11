@@ -1309,4 +1309,15 @@ public void deleteItem(int itemId, Callback<Void> callback) {
             }
         });
     }
+
+    public void recordDebtPayment(Debt debt, double paymentAmount, Callback<Void> callback) {
+        double newRemaining = Math.max(0, debt.getRemainingAmount() - paymentAmount);
+        String newStatus = newRemaining == 0 ? "paid" : "partially_paid";
+
+        JsonObject updates = new JsonObject();
+        updates.addProperty("remaining_amount", newRemaining);
+        updates.addProperty("status", newStatus);
+
+        updateDebt(debt.getId(), updates, callback);
+    }
 }
